@@ -1,14 +1,22 @@
-using Dapper;
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Connection.Persistence;
+using FlowBoard.WebApi.Settings;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true);
+builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("ConnectionStrings"));
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? throw new InvalidOperationException("Connection string not found");
-
-builder.Services.AddSingleton<ISqlConnectionFactory>(new SqlConnectionFactory(connectionString));
+builder.Services.AddSingleton<ISqlConnectionFactory>(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<DatabaseSettings>>().Value;
+    
+    if (string.IsNullOrEmpty(settings.DefaultConnection))
+    {
+        throw new InvalidOperationException("Connection string is empty!");
+    }
+    
+    return new SqlConnectionFactory(settings.DefaultConnection);
+});
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

@@ -1,0 +1,12 @@
+C:\Users\FlowBoard\FlowBoard.Domain\bin\Debug\net10.0\FlowBoard.Domain.deps.json
+C:\Users\FlowBoard\FlowBoard.Domain\bin\Debug\net10.0\FlowBoard.Domain.dll
+C:\Users\FlowBoard\FlowBoard.Domain\bin\Debug\net10.0\FlowBoard.Domain.pdb
+C:\Users\FlowBoard\FlowBoard.Domain\obj\Debug\net10.0\FlowBoard.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\FlowBoard\FlowBoard.Domain\obj\Debug\net10.0\FlowBoard.Domain.AssemblyInfoInputs.cache
+C:\Users\FlowBoard\FlowBoard.Domain\obj\Debug\net10.0\FlowBoard.Domain.AssemblyInfo.cs
+C:\Users\FlowBoard\FlowBoard.Domain\obj\Debug\net10.0\FlowBoard.Domain.csproj.CoreCompileInputs.cache
+C:\Users\FlowBoard\FlowBoard.Domain\obj\Debug\net10.0\FlowBoard.Domain.sourcelink.json
+C:\Users\FlowBoard\FlowBoard.Domain\obj\Debug\net10.0\FlowBoard.Domain.dll
+C:\Users\FlowBoard\FlowBoard.Domain\obj\Debug\net10.0\refint\FlowBoard.Domain.dll
+C:\Users\FlowBoard\FlowBoard.Domain\obj\Debug\net10.0\FlowBoard.Domain.pdb
+C:\Users\FlowBoard\FlowBoard.Domain\obj\Debug\net10.0\ref\FlowBoard.Domain.dll

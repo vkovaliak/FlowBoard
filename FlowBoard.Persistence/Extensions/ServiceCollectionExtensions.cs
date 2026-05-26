@@ -3,7 +3,7 @@ using FlowBoard.Persistence.Connection;
 using FlowBoard.Persistence.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FlowBoard.Persistence;
+namespace FlowBoard.Persistence.Extensions;
 
 public static class DependencyInjection
 {

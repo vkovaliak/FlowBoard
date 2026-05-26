@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FlowBoard.Application\FlowBoard.Application.csproj" />
-    <ProjectReference Include="..\FlowBoard.Database\FlowBoard.Database.csproj" />
   </ItemGroup>
 
   <ItemGroup>

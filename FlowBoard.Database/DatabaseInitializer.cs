@@ -1,13 +1,15 @@
 ﻿using DbUp;
+using FlowBoard.Persistence.Configurations;
+using Microsoft.Extensions.Options;
 
 namespace FlowBoard.Database;
 
 public class DatabaseInitializer
 {
     private readonly string _connectionString;
-    public DatabaseInitializer(string connectionString)
+    public DatabaseInitializer(IOptions<DatabaseOptions> options)
     {
-        _connectionString = connectionString;
+        _connectionString = options.Value.ConnectionString;
     }
 
     public async Task InitializeAsync()

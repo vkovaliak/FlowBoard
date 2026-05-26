@@ -12,5 +12,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Scripts\*.sql" />
 </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FlowBoard.Persistence\FlowBoard.Persistence.csproj" />
+  </ItemGroup>
 
 </Project>

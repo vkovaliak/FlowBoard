@@ -1,11 +1,15 @@
 using FlowBoard.Database;
 using FlowBoard.Application.Extensions;
 using FlowBoard.Persistence.Extensions;
+using FlowBoard.Persistence.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection(DatabaseOptions.SectionName));
 builder.Services.AddSingleton<DatabaseInitializer>();
+
 builder.Services.AddControllers();
+
 builder.Services.AddApplication();
 builder.Services.AddPersistence();
 

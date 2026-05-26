@@ -15,6 +15,7 @@
     <ProjectReference Include="..\FlowBoard.Application\FlowBoard.Application.csproj" />
     <ProjectReference Include="..\FlowBoard.Persistence\FlowBoard.Persistence.csproj" />
     <ProjectReference Include="..\FlowBoard.Infrastructure\FlowBoard.Infrastructure.csproj" />
+    <ProjectReference Include="..\FlowBoard.Database\FlowBoard.Database.csproj" />
   </ItemGroup>
 
 </Project>

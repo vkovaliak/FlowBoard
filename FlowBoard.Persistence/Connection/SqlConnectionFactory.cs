@@ -4,7 +4,7 @@ using FlowBoard.Persistence.Configurations;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 
-namespace FlowBoard.Connection.Persistence;
+namespace FlowBoard.Persistence.Connection;
 
 public class SqlConnectionFactory : ISqlConnectionFactory
 {

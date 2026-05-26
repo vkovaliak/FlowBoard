@@ -1,22 +1,11 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Connection.Persistence;
-using FlowBoard.WebApi.Settings;
-using Microsoft.Extensions.Options;
+using FlowBoard.Persistence.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("ConnectionStrings"));
+builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection(DatabaseOptions.SectionName));
 
-builder.Services.AddSingleton<ISqlConnectionFactory>(sp =>
-{
-    var settings = sp.GetRequiredService<IOptions<DatabaseSettings>>().Value;
-    
-    if (string.IsNullOrEmpty(settings.DefaultConnection))
-    {
-        throw new InvalidOperationException("Connection string is empty!");
-    }
-    
-    return new SqlConnectionFactory(settings.DefaultConnection);
-});
+builder.Services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

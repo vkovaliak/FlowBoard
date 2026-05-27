@@ -4,34 +4,9 @@ using FlowBoard.Domain.Entities;
 
 namespace FlowBoard.Persistence.Repositories;
 
-public class UserRepository : IUserRepository
+public class UserRepository : BaseRepository<User>, IUserRepository
 {
-    private readonly ISqlConnectionFactory _connectionFactory;
-
-    public UserRepository(ISqlConnectionFactory connectionFactory)
+    public UserRepository(ISqlConnectionFactory connectionFactory) : base(connectionFactory)
     {
-        _connectionFactory = connectionFactory;
-    }
-
-    public async Task CreateAsync(User user)
-    {
-        const string sql = """
-            INSERT INTO Users
-            (
-                Id,
-                EmailAddress,
-                PasswordHash
-            )
-            VALUES
-            (
-                @Id,
-                @EmailAddress,
-                @PasswordHash
-            )
-            """;
-
-        using var connection = _connectionFactory.CreateConnection();
-
-        await connection.ExecuteAsync(sql, user);
     }
 }

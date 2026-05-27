@@ -2,7 +2,6 @@ using FlowBoard.Domain.Entities;
 
 namespace FlowBoard.Application.Abstractions;
 
-public interface IUserRepository
+public interface IUserRepository : IBaseRepository<User, Guid>
 {
-    Task CreateAsync(User user);
 }

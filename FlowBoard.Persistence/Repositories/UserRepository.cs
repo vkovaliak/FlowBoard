@@ -4,7 +4,7 @@ using FlowBoard.Domain.Entities;
 
 namespace FlowBoard.Persistence.Repositories;
 
-public class UserRepository : BaseRepository<User>, IUserRepository
+public class UserRepository : BaseRepository<User, Guid>, IUserRepository
 {
     public UserRepository(ISqlConnectionFactory connectionFactory) : base(connectionFactory)
     {

@@ -1,10 +1,9 @@
 using Dapper;
 using FlowBoard.Application.Abstractions;
-using System.Data;
 
 namespace FlowBoard.Persistence.Repositories;
 
-public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : class
+public class BaseRepository<TEntity, TId> : IBaseRepository<TEntity, TId> where TEntity : class
 {
     private readonly ISqlConnectionFactory _connectionFactory;
 
@@ -17,10 +16,10 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        await connection.InsertAsync<Guid, TEntity>(entity);
+        await connection.InsertAsync<TId, TEntity>(entity);
     }
 
-    public async Task<TEntity?> GetByIdAsync(Guid id)
+    public async Task<TEntity?> GetByIdAsync(TId id)
     {
         using var connection = _connectionFactory.CreateConnection();
 

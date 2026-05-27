@@ -1,10 +1,11 @@
 using System.Data;
 using Dapper;
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Entities;
 
 namespace FlowBoard.Persistence.Repositories;
 
-public class BaseRepository<TEntity, TId> : IBaseRepository<TEntity, TId> where TEntity : class
+public class BaseRepository<TEntity, TId> : IBaseRepository<TEntity, TId> where TEntity : BaseEntity<TId>
 {
     private readonly ISqlConnectionFactory? _connectionFactory;
 

@@ -1,6 +1,8 @@
+using FlowBoard.Domain.Entities;
+
 namespace FlowBoard.Application.Abstractions;
 
-public interface IBaseRepository<TEntity, TId> where TEntity : class
+public interface IBaseRepository<TEntity, TId> where TEntity : BaseEntity<TId>
 {
     Task CreateAsync(TEntity entity);
     Task<TEntity?> GetByIdAsync(TId id);

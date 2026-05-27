@@ -1,3 +1,4 @@
+using System.Reflection;
 using FlowBoard.Application.Features.Users.Commands.CreateUser;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,7 +10,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssemblyContaining<CreateUserCommandHandler>();
+            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
         });
 
         return services;

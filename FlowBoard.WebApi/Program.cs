@@ -8,8 +8,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection(DatabaseOptions.SectionName));
 builder.Services.AddSingleton<DatabaseInitializer>();
 
-builder.Services.AddControllers();
-
 builder.Services.AddApplication();
 builder.Services.AddPersistence();
 
@@ -23,6 +21,8 @@ using (var scope = app.Services.CreateScope())
     var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
     await initializer.InitializeAsync();
 }
+
+app.UseHttpsRedirection();
 
 if (app.Environment.IsDevelopment())
 {

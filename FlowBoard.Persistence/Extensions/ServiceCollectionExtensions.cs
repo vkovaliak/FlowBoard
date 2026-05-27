@@ -13,7 +13,6 @@ public static class DependencyInjection
         services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
-        services.AddScoped<IRepositoryFactory, RepositoryFactory>();
 
         return services;
     }

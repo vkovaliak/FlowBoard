@@ -5,87 +5,59 @@ using FlowBoard.Domain.Entities;
 
 namespace FlowBoard.Persistence.Repositories;
 
-public class BaseRepository<TEntity, TId> : IBaseRepository<TEntity, TId> where TEntity : BaseEntity<TId>
+public class BaseRepository<TEntity, TId> : IBaseRepository<TEntity, TId>, IDisposable where TEntity : BaseEntity<TId>
 {
-    private readonly ISqlConnectionFactory? _connectionFactory;
+    protected readonly IDbConnection _connection;
+    protected readonly IDbTransaction? _transaction;
 
-    protected readonly IDbConnection? _activeConnection;
-    protected readonly IDbTransaction? _activeTransaction;
+    private readonly bool _ownsConnection;
 
     public BaseRepository(ISqlConnectionFactory connectionFactory)
     {
-        _connectionFactory = connectionFactory;
+        _connection = connectionFactory.CreateConnection();
+        _ownsConnection = true;
     }
 
     internal BaseRepository(IDbConnection connection, IDbTransaction transaction)
     {
-        _activeConnection = connection;
-        _activeTransaction = transaction;
-    }
+        _connection = connection;
+        _transaction = transaction;
 
-    private IDbConnection GetConnection() => _activeConnection ?? _connectionFactory!.CreateConnection();
+        _ownsConnection = false;
+    }
 
     public async Task CreateAsync(TEntity entity)
     {
-        if (_activeConnection != null)
-        {
-            await _activeConnection.InsertAsync<TId, TEntity>(entity, _activeTransaction);
-        }
-        else
-        {
-            using var connection = GetConnection();
-            await connection.InsertAsync<TId, TEntity>(entity);
-        }
+        await _connection.InsertAsync<TId, TEntity>(entity, _transaction);
     }
 
     public async Task<TEntity?> GetByIdAsync(TId id)
     {
-        if (_activeConnection != null)
-        {
-            return await _activeConnection.GetAsync<TEntity>(id, _activeTransaction);
-        }
-        using var connection = GetConnection();
-        return await connection.GetAsync<TEntity>(id);
+        return await _connection.GetAsync<TEntity>(id, _transaction);
     }
 
     public async Task<IEnumerable<TEntity>> GetAllAsync()
     {
-         if (_activeConnection != null)
-        {
-            return await _activeConnection.GetListAsync<TEntity>(_activeTransaction);
-        }
-        using var connection = GetConnection();
-        return await connection.GetListAsync<TEntity>();
+        return await _connection.GetListAsync<TEntity>(_transaction);
     }
 
     public async Task<bool> UpdateAsync(TEntity entity)
     {
-        if (_activeConnection != null)
-        {
-            var result = await _activeConnection.UpdateAsync(entity, _activeTransaction);
-            return result > 0;
-        }
-        else
-        {
-            using var connection = GetConnection();
-            var result = await connection.UpdateAsync(entity);
-            return result > 0;
-        }
-        
+        var result = await _connection.UpdateAsync(entity, _transaction);
+        return result > 0;
     }
 
     public async Task<bool> DeleteAsync(TEntity entity)
     {
-        if (_activeConnection != null)
+        var result = await _connection.DeleteAsync(entity, _transaction);
+        return result > 0;
+    }
+
+    public void Dispose()
+    {
+        if (_ownsConnection)
         {
-            var result = await _activeConnection.DeleteAsync(entity, _activeTransaction);
-            return result > 0;
-        }
-        else
-        {
-            using var connection = GetConnection();
-            var result = await connection.DeleteAsync(entity);
-            return result > 0;
+            _connection.Dispose();
         }
     }
 }

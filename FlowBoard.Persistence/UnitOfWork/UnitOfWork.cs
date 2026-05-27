@@ -1,38 +1,34 @@
 using System.Data;
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Persistence.Repositories;
 
 namespace FlowBoard.Persistence.UnitOfWork;
 
 public class UnitOfWork : IUnitOfWork
 {
     private readonly IDbConnection _connection;
-    public readonly IDbTransaction _transaction;
+    private readonly IDbTransaction _transaction;
+    private IUserRepository? _users;
 
-    public IDbConnection Connection => _connection;
-    public IDbTransaction Transaction => _transaction;
+    public IUserRepository Users => _users ??= new UserRepository(_connection, _transaction);
 
-    public UnitOfWork(IDbConnection connection)
+
+    public UnitOfWork(ISqlConnectionFactory connectionFactory)
     {
-        _connection = connection;
+        _connection = connectionFactory.CreateConnection();
 
-        if (_connection.State != ConnectionState.Open)
-        {
-            _connection.Open();
-        }
-
+        _connection.Open();
         _transaction = _connection.BeginTransaction();
     }
 
-    public async Task CommitAsync()
+    public void Commit()
     {
         _transaction.Commit();
-        await Task.CompletedTask;
     }
 
-    public async Task RollbackAsync()
+    public void Rollback()
     {
         _transaction.Rollback();
-        await Task.CompletedTask;
     }
 
     public void Dispose()

@@ -11,9 +11,8 @@ public class UnitOfWorkFactory : IUnitOfWorkFactory
         _connectionFactory = connectionFactory;
     }
 
-    public async Task<IUnitOfWork> CreateAsync()
+    public IUnitOfWork Create()
     {
-        var connection = _connectionFactory.CreateConnection();
-        return await Task.FromResult(new UnitOfWork(connection));
+        return new UnitOfWork(_connectionFactory);
     }
 }

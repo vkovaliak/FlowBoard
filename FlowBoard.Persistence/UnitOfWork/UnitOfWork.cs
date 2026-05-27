@@ -9,6 +9,9 @@ public class UnitOfWork : IUnitOfWork
     private readonly IDbConnection _connection;
     private readonly IDbTransaction _transaction;
 
+    private IBoardRepository? _boards;
+    public IBoardRepository Boards => _boards ??= new BoardRepository(_connection, _transaction);
+
     private IUserRepository? _users;
     public IUserRepository Users 
         => _users ??= new UserRepository(_connection, _transaction);

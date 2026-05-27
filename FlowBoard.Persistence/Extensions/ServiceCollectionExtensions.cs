@@ -11,8 +11,9 @@ public static class DependencyInjection
     public static IServiceCollection AddPersistence(this IServiceCollection services)
     {
         services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
-        services.AddScoped<IUserRepository, UserRepository>();
         services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
+
+        services.AddScoped<IUserRepository, UserRepository>();
 
         return services;
     }

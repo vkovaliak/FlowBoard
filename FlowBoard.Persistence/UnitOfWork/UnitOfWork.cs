@@ -8,9 +8,10 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly IDbConnection _connection;
     private readonly IDbTransaction _transaction;
-    private IUserRepository? _users;
 
-    public IUserRepository Users => _users ??= new UserRepository(_connection, _transaction);
+    private IUserRepository? _users;
+    public IUserRepository Users 
+        => _users ??= new UserRepository(_connection, _transaction);
 
 
     public UnitOfWork(ISqlConnectionFactory connectionFactory)
@@ -18,6 +19,7 @@ public class UnitOfWork : IUnitOfWork
         _connection = connectionFactory.CreateConnection();
 
         _connection.Open();
+
         _transaction = _connection.BeginTransaction();
     }
 

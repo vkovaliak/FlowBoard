@@ -1,4 +1,5 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Constants;
 using FlowBoard.Domain.Entities;
 using MediatR;
 
@@ -26,24 +27,22 @@ public class CreateBoardCommandHandler : IRequestHandler<CreateBoardCommand, Gui
         using var uow = _uowFactory.Create();
         try
         {
-            await uow.Boards.CreateAsync(board);
+            await uow.BoardRepository.CreateAsync(board);
 
-            await uow.Boards.AddMemberAsync(board.Id, command.CurrentUserId);
+            await uow.BoardRepository.AddMemberAsync(board.Id, command.CurrentUserId);
 
-            var defaultColumnNames = new[] { "To Do", "In Progress", "Done" };
-
-            for (int i = 0; i < defaultColumnNames.Length; i++)
+            for (int i = 0; i < BoardConstants.DefaultColumnNames.Length; i++)
             {
                 var defaultList = new ListEntity
                 {
                     Id = Guid.NewGuid(),
                     BoardId = board.Id,
-                    Name = defaultColumnNames[i],
+                    Name = BoardConstants.DefaultColumnNames[i],
                     Position = i,
                     CreatedBy = command.CurrentUserId
                 };
 
-                await uow.Lists.CreateAsync(defaultList);
+                await uow.ListRepository.CreateAsync(defaultList);
             }
 
             uow.Commit();

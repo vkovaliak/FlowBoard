@@ -2,7 +2,9 @@ namespace FlowBoard.Application.Abstractions;
 
 public interface IUnitOfWork : IDisposable
 {
-    IUserRepository Users { get; }
+    IListRepository ListRepository { get; }
+    IUserRepository UserRepository { get; }
+    IBoardRepository BoardRepository { get; }
     
     void Commit();
     void Rollback();

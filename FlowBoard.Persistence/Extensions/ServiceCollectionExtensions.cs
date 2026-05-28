@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
 
         services.AddScoped<IBoardRepository, BoardRepository>();
+        services.AddScoped<IListRepository, ListRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
 
         return services;

@@ -1,5 +1,6 @@
     using FlowBoard.Application.Features.Boards.Commands.CreateBoard;
-    using FlowBoard.Application.Features.Boards.Queries.GetMyBoards;
+using FlowBoard.Application.Features.Boards.Queries.GetBoardDetails;
+using FlowBoard.Application.Features.Boards.Queries.GetMyBoards;
     using MediatR;
     using Microsoft.AspNetCore.Mvc;
 
@@ -31,6 +32,15 @@
             var query = new GetMyBoardsQuery(currentUserId);
             var result = await _mediator.Send(query);
             
+            return Ok(result);
+        }
+
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetDetails([FromRoute] Guid id)
+        {
+            var query = new GetBoardDetailsQuery(id);
+            var result = await _mediator.Send(query);
+
             return Ok(result);
         }
     }

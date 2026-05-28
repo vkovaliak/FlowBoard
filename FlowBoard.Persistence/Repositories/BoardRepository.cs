@@ -21,4 +21,22 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
 
         return _connection.ExecuteAsync(sql, new { BoardId = boardId, UserId = userId }, _transaction);
     }
+
+    public async Task<IEnumerable<Board>> GetByUserIdAsync(Guid userId)
+    {
+        const string sql = @"
+            SELECT DISTINCT 
+                b.Id, 
+                b.Name, 
+                b.IsPublic, 
+                b.CreatedBy, 
+                b.CreatedAt
+            FROM Boards b
+            LEFT JOIN BoardMembers bm ON b.Id = bm.BoardId
+            WHERE b.CreatedBy = @UserId 
+               OR bm.UserId = @UserId
+            ORDER BY b.CreatedAt DESC";
+
+        return await _connection.QueryAsync<Board>(sql, new { UserId = userId });
+    }
 }

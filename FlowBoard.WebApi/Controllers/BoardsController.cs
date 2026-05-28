@@ -16,7 +16,7 @@ public class BoardsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateBoardAsync(CreateBoardCommand command)
+    public async Task<IActionResult> CreateAsync(CreateBoardCommand command)
     {
         var boardId = await _mediator.Send(command);
 

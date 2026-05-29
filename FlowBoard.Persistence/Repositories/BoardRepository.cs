@@ -25,6 +25,13 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
         return _connection.ExecuteAsync(sql, new { BoardId = boardId, UserId = userId }, _transaction);
     }
 
+    public async Task<bool> IsMemberAsync(Guid boardId, Guid userId)
+    {
+        const string sql = "SELECT COUNT(1) FROM BoardMembers WHERE BoardId = @BoardId AND UserId = @UserId";
+        var result = await _connection.QueryFirstOrDefaultAsync<int>(sql, new { BoardId = boardId, UserId = userId }, _transaction);
+        return result > 0;
+    }
+
     public async Task<IEnumerable<Board>> GetByUserIdAsync(Guid userId)
     {
         const string sql = @"

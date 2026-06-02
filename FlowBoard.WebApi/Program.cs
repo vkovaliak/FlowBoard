@@ -14,14 +14,15 @@ builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection(Dat
 builder.Services.AddSingleton<DatabaseInitializer>();
 
 builder.Services.AddApplication();
-builder.Services.AddPersistence();
-
 builder.Services.AddInfrastructure();
+builder.Services.AddPersistence();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-var jwtOptions = builder.Configuration.GetSection("JwtOptions").Get<JwtOptions>();
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+
+var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

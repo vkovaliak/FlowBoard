@@ -24,6 +24,10 @@ public class UnitOfWork : IUnitOfWork
     private IUserRepository? _users;
     public IUserRepository UserRepository 
         => _users ??= new UserRepository(_connection, _transaction);
+    
+    private IUserSessionRepository? _userSessions;
+    public IUserSessionRepository UserSessionRepository
+        => _userSessions ??= new UserSessionRepository(_connection, _transaction);
 
 
     public UnitOfWork(ISqlConnectionFactory connectionFactory)

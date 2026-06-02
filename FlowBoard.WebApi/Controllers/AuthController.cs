@@ -1,5 +1,7 @@
 using FlowBoard.Application.Features.Auth.Commands.Login;
+using FlowBoard.Application.Features.Auth.Commands.RefreshToken;
 using FlowBoard.Application.Features.Auth.Commands.Register;
+using FlowBoard.Domain.DTOs.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,8 +29,16 @@ public class UsersController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> LoginAsync(LoginCommand command)
     {
-        var token = await _mediator.Send(command);
+        var tokens = await _mediator.Send(command);
         
-        return Ok(token);
+        return Ok(tokens);
+    }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> RefreshAsync(RefreshTokenCommand command)
+    {
+        var tokens = await _mediator.Send(command);
+        
+        return Ok(tokens);
     }
 }

@@ -16,19 +16,15 @@ public class UpdateBoardCommandHandler : IRequestHandler<UpdateBoardCommand, boo
     public async Task<bool> Handle(UpdateBoardCommand request, CancellationToken cancellationToken)
     {
         var board = await _boardRepository.GetByIdAsync(request.BoardId);
-        if (board == null)
+        if (board == null
+            || board.CreatedBy != request.CurrentUserId)
         {
             return false;
         }
-        if (board.CreatedBy != request.CurrentUserId)
-        {
-            return false;
-        }
+
         board.Name = request.Name;
         board.IsPublic = request.IsPublic;
 
-        var result = await _boardRepository.UpdateAsync(board);
-        return result;
-
+        return await _boardRepository.UpdateAsync(board);
     }
 }

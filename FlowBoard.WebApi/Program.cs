@@ -2,6 +2,11 @@ using FlowBoard.Database;
 using FlowBoard.Application.Extensions;
 using FlowBoard.Persistence.Extensions;
 using FlowBoard.Persistence.Configurations;
+using FlowBoard.Infrastructure.Configurations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using FlowBoard.Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,8 +16,27 @@ builder.Services.AddSingleton<DatabaseInitializer>();
 builder.Services.AddApplication();
 builder.Services.AddPersistence();
 
+builder.Services.AddInfrastructure();
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+var jwtOptions = builder.Configuration.GetSection("JwtOptions").Get<JwtOptions>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtOptions!.Issuer,
+            ValidAudience = jwtOptions!.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions!.SecretKey))
+        };
+    });
 
 var app = builder.Build();
 
@@ -23,6 +47,9 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {

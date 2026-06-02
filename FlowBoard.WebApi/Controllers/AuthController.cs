@@ -1,0 +1,34 @@
+using FlowBoard.Application.Features.Auth.Commands.Login;
+using FlowBoard.Application.Features.Auth.Commands.Register;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+
+namespace FlowBoard.WebApi.Controllers;
+
+[ApiController]
+[Route("api/auth")]
+public class UsersController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public UsersController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    [HttpPost("register")]
+    public async Task<IActionResult> RegisterAsync(RegisterCommand command)
+    {
+        var userId = await _mediator.Send(command);
+
+        return Ok(userId);
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> LoginAsync(LoginCommand command)
+    {
+        var token = await _mediator.Send(command);
+        
+        return Ok(token);
+    }
+}

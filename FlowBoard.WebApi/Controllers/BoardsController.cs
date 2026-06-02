@@ -6,11 +6,13 @@ using FlowBoard.Application.Features.Boards.Queries.GetBoardDetails;
 using FlowBoard.Application.Features.Boards.Queries.GetMyBoards;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FlowBoard.WebAPI.Controllers;
 
 [ApiController]
 [Route("api/boards")]
+[Authorize]
 public class BoardsController : ControllerBase
 {
     private readonly IMediator _mediator;

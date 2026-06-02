@@ -1,0 +1,8 @@
+using MediatR;
+
+namespace FlowBoard.Application.Features.Auth.Commands.Register;
+
+public record RegisterCommand(
+    string Email, 
+    string Password) 
+    : IRequest<Guid>;

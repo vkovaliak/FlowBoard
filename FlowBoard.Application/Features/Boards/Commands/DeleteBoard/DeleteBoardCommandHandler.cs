@@ -15,17 +15,12 @@ public class DeleteBoardCommandHandler : IRequestHandler<DeleteBoardCommand, boo
     public async Task<bool> Handle(DeleteBoardCommand request, CancellationToken cancellationToken)
     {
         var board = await _boardRepository.GetByIdAsync(request.BoardId);
-        if (board == null)
-        {
-            return false;
-        }
-        if (board.CreatedBy != request.CurrentUserId)
+        if (board is null
+            || board.CreatedBy != request.CurrentUserId)
         {
             return false;
         }
 
-        var result = await _boardRepository.DeleteAsync(board);
-        return result;
-
+        return await _boardRepository.DeleteAsync(board);
     }
 }

@@ -1,6 +1,7 @@
 using FlowBoard.Application.Features.Boards.Commands.CreateBoard;
 using FlowBoard.Application.Features.Boards.Commands.DeleteBoard;
 using FlowBoard.Application.Features.Boards.Commands.UpdateBoard;
+using FlowBoard.Application.Features.Boards.Commands.InviteMember;
 using FlowBoard.Application.Features.Boards.Queries.GetBoardDetails;
 using FlowBoard.Application.Features.Boards.Queries.GetMyBoards;
 using MediatR;
@@ -59,5 +60,15 @@ public class BoardsController : ControllerBase
     {
         var result = await _mediator.Send(command);
         return Ok(result);
+    }
+
+    [HttpPost("invite")]
+    public async Task<IActionResult> InviteMemberAsync(InviteMemberCommand command)
+    {
+        var result = await _mediator.Send(command);
+        
+        return result
+            ? Ok(result)
+            : BadRequest("Something went wrong");
     }
 }

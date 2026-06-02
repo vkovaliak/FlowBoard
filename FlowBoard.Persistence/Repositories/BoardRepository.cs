@@ -22,7 +22,25 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             INSERT INTO BoardMembers (BoardId, UserId) 
             VALUES (@BoardId, @UserId);";
 
-        return _connection.ExecuteAsync(sql, new { BoardId = boardId, UserId = userId }, _transaction);
+        return _connection.ExecuteAsync(
+            sql, 
+            new { BoardId = boardId, UserId = userId }, 
+            _transaction);
+    }
+
+    public async Task<bool> IsMemberAsync(Guid boardId, Guid userId)
+    {
+        const string sql = """
+            SELECT COUNT(1) FROM BoardMembers 
+            WHERE BoardId = @BoardId AND UserId = @UserId
+            """;
+
+        var result = await _connection.QueryFirstOrDefaultAsync<int>(
+            sql, 
+            new { BoardId = boardId, UserId = userId }, 
+            _transaction);
+
+        return result > 0;
     }
 
     public async Task<IEnumerable<Board>> GetByUserIdAsync(Guid userId)
@@ -40,81 +58,83 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                OR bm.UserId = @UserId
             ORDER BY b.CreatedAt DESC";
 
-        return await _connection.QueryAsync<Board>(sql, new { UserId = userId });
+        return await _connection.QueryAsync<Board>(
+            sql, 
+            new { UserId = userId });
     }
 
     public async Task<BoardDetailsDto?> GetDetailsAsync(Guid boardId)
-{
-    const string sql = """
-        SELECT
-            b.Id,
-            b.Name,
-            b.IsPublic,
-            b.CreatedBy,
-            b.CreatedAt,
+    {
+        const string sql = """
+            SELECT
+                b.Id,
+                b.Name,
+                b.IsPublic,
+                b.CreatedBy,
+                b.CreatedAt,
 
-            l.Id,
-            l.BoardId,
-            l.Name,
-            l.Position,
+                l.Id,
+                l.BoardId,
+                l.Name,
+                l.Position,
 
-            c.Id,
-            c.Name,
-            c.Description,
-            c.Position
+                c.Id,
+                c.Name,
+                c.Description,
+                c.Position
 
-        FROM Boards b
-        LEFT JOIN Lists l ON l.BoardId = b.Id
-        LEFT JOIN Cards c ON c.ListId = l.Id
+            FROM Boards b
+            LEFT JOIN Lists l ON l.BoardId = b.Id
+            LEFT JOIN Cards c ON c.ListId = l.Id
 
-        WHERE b.Id = @BoardId
+            WHERE b.Id = @BoardId
 
-        ORDER BY l.Position, c.Position;
-        """;
+            ORDER BY l.Position, c.Position;
+            """;
 
 
-    var boardDictionary = new Dictionary<Guid, BoardDetailsDto>();
-    var listDictionary = new Dictionary<Guid, ListDto>();
+        var boardDictionary = new Dictionary<Guid, BoardDetailsDto>();
+        var listDictionary = new Dictionary<Guid, ListDto>();
 
-    var result = await _connection.QueryAsync<
-        BoardDetailsDto,
-        ListDto,
-        CardDto,
-        BoardDetailsDto>(
-        sql,
-        (board, list, card) =>
-        {
-            if (!boardDictionary.TryGetValue(board.Id, out var boardEntry))
+        var result = await _connection.QueryAsync<
+            BoardDetailsDto,
+            ListDto,
+            CardDto,
+            BoardDetailsDto>(
+            sql,
+            (board, list, card) =>
             {
-                boardEntry = board;
-                boardEntry.Lists = [];
-
-                boardDictionary.Add(boardEntry.Id, boardEntry);
-            }
-
-            if (list is not null)
-            {
-                if (!listDictionary.TryGetValue(list.Id, out var listEntry))
+                if (!boardDictionary.TryGetValue(board.Id, out var boardEntry))
                 {
-                    listEntry = list;
-                    listEntry.Cards = [];
+                    boardEntry = board;
+                    boardEntry.Lists = [];
 
-                    listDictionary.Add(listEntry.Id, listEntry);
-
-                    boardEntry.Lists.Add(listEntry);
+                    boardDictionary.Add(boardEntry.Id, boardEntry);
                 }
 
-                if (card is not null)
+                if (list is not null)
                 {
-                    listEntry.Cards.Add(card);
+                    if (!listDictionary.TryGetValue(list.Id, out var listEntry))
+                    {
+                        listEntry = list;
+                        listEntry.Cards = [];
+
+                        listDictionary.Add(listEntry.Id, listEntry);
+
+                        boardEntry.Lists.Add(listEntry);
+                    }
+
+                    if (card is not null)
+                    {
+                        listEntry.Cards.Add(card);
+                    }
                 }
-            }
 
-            return boardEntry;
-        },
-        new { BoardId = boardId },
-        splitOn: "Id,Id");
+                return boardEntry;
+            },
+            new { BoardId = boardId },
+            splitOn: "Id,Id");
 
-    return boardDictionary.Values.FirstOrDefault();
-}
+        return boardDictionary.Values.FirstOrDefault();
+    }
 }

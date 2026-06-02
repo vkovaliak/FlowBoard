@@ -12,6 +12,10 @@ public class UnitOfWork : IUnitOfWork
     private IBoardRepository? _boards;
     public IBoardRepository BoardRepository 
         => _boards ??= new BoardRepository(_connection, _transaction);
+    
+    private ICardRepository? _cards;
+    public ICardRepository CardRepository
+        => _cards ??= new CardRepository(_connection, _transaction);
 
     private IListRepository? _lists;
     public IListRepository ListRepository

@@ -18,12 +18,8 @@ public class InviteMemberCommandHandler : IRequestHandler<InviteMemberCommand, b
         try
         {
             var board = await uow.BoardRepository.GetByIdAsync(request.BoardId);
-            if (board == null)
-            {
-                return false;
-            }
-
-            if (board.CreatedBy != request.CurrentUserId)
+            if (board is null
+                || board.CreatedBy != request.CurrentUserId)
             {
                 return false;
             }

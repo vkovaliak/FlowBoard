@@ -17,7 +17,14 @@ public class UserRepository : BaseRepository<User, Guid>, IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        const string sql = "SELECT * FROM Users WHERE EmailAddress = @Email";
-        return await _connection.QueryFirstOrDefaultAsync<User>(sql, new { Email = email }, _transaction);
+        const string sql = """
+            SELECT * FROM Users 
+            WHERE EmailAddress = @Email
+            """;
+
+        return await _connection.QueryFirstOrDefaultAsync<User>(
+            sql, 
+            new { Email = email }, 
+            _transaction);
     }
 }

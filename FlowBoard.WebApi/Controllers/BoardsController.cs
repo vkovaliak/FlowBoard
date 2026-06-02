@@ -66,10 +66,9 @@ public class BoardsController : ControllerBase
     public async Task<IActionResult> InviteMemberAsync(InviteMemberCommand command)
     {
         var result = await _mediator.Send(command);
-        if (!result)
-        {
-            return BadRequest("Something went wrong");
-        }
-        return Ok(result);
+        
+        return result
+            ? Ok(result)
+            : BadRequest("Something went wrong");
     }
 }

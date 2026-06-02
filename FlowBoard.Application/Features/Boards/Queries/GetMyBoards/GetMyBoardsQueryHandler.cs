@@ -1,5 +1,6 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.DTOs.Boards;
+using FlowBoard.Domain.Mappings;
 using MediatR;
 
 namespace FlowBoard.Application.Features.Boards.Queries.GetMyBoards;

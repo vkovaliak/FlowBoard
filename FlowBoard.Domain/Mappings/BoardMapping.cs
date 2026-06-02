@@ -1,6 +1,7 @@
+using FlowBoard.Domain.DTOs.Boards;
 using FlowBoard.Domain.Entities;
 
-namespace FlowBoard.Domain.DTOs.Boards;
+namespace FlowBoard.Domain.Mappings;
 
 public static class BoardMapping
 {

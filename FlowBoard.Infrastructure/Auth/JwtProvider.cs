@@ -18,7 +18,7 @@ public class JwtProvider : IJwtProvider
         _options = jwtOptions.Value;
     }
 
-    public string GenerateAccessToken(Guid userId, string email)
+    public (string, DateTime) GenerateAccessToken(Guid userId, string email)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -29,22 +29,29 @@ public class JwtProvider : IJwtProvider
             new Claim(JwtRegisteredClaimNames.Email, email),
         };
 
+        var expiryTime = DateTime.UtcNow.AddMinutes(_options.ExpiryInMinutes);
+
         var token = new JwtSecurityToken(
             issuer: _options.Issuer,
             audience: _options.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(_options.ExpiryInMinutes),
+            expires: expiryTime,
             signingCredentials: credentials);
+        
+        var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return (tokenString, expiryTime);
     }
 
-    public string GenerateRefreshToken()
+    public (string, DateTime) GenerateRefreshToken()
     {
         var randomNumber = new byte[64];
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(randomNumber);
         
-        return Convert.ToBase64String(randomNumber);
+        var token = Convert.ToBase64String(randomNumber);
+        var expiryTime = DateTime.UtcNow.AddDays(_options.RefreshTokenExpiryInDays);
+        
+        return(token, expiryTime);
     }
 }

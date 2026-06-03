@@ -29,19 +29,25 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
             throw new UnauthorizedAccessException("Invalid password.");
         }
         
-        var accessToken = _jwtProvider.GenerateAccessToken(user.Id, user.EmailAddress);
-        var refreshToken = _jwtProvider.GenerateRefreshToken();
+        var (accessToken, accessTokenExpiry) = _jwtProvider.GenerateAccessToken(user.Id, user.EmailAddress);
+        var (refreshToken, refreshTokenExpiry) = _jwtProvider.GenerateRefreshToken();
 
         var userSession = new UserSession
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
             Token = refreshToken,
-            ExpiryTime = DateTime.UtcNow.AddDays(7)
+            ExpiryTime = refreshTokenExpiry,
+
         };
 
         await _userSessionRepository.CreateAsync(userSession);
 
-        return new TokenDto(accessToken, refreshToken);
+        return new TokenDto(
+            accessToken, 
+            refreshToken,
+            accessTokenExpiry,
+            refreshTokenExpiry
+        );
     }
 }

@@ -39,8 +39,8 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, T
                 throw new UnauthorizedAccessException("User not found.");
             }
 
-            var newAccessToken = _jwtProvider.GenerateAccessToken(user.Id, user.EmailAddress);
-            var newRefreshToken = _jwtProvider.GenerateRefreshToken();
+            var (newAccessToken, accessTokenExpiry) = _jwtProvider.GenerateAccessToken(user.Id, user.EmailAddress);
+            var (newRefreshToken, refreshTokenExpiry) = _jwtProvider.GenerateRefreshToken();
 
             await uow.UserSessionRepository.DeleteAsync(session);
 
@@ -49,13 +49,18 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, T
                 Id = Guid.NewGuid(),
                 UserId = user.Id,
                 Token = newRefreshToken,
-                ExpiryTime = DateTime.UtcNow.AddDays(7)
+                ExpiryTime = refreshTokenExpiry
             };
             await uow.UserSessionRepository.CreateAsync(newSession);
 
             uow.Commit();
 
-            return new TokenDto(newAccessToken, newRefreshToken);
+            return new TokenDto(
+                newAccessToken, 
+                newRefreshToken,
+                accessTokenExpiry,
+                refreshTokenExpiry
+            );
         }
         catch
         {

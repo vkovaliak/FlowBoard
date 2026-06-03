@@ -2,6 +2,6 @@ namespace FlowBoard.Application.Abstractions;
 
 public interface IJwtProvider
 {
-    string GenerateAccessToken(Guid userId, string email);
-    string GenerateRefreshToken();
+    (string, DateTime) GenerateAccessToken(Guid userId, string email);
+    (string, DateTime) GenerateRefreshToken();
 }

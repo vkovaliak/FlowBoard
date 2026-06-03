@@ -21,9 +21,9 @@ public class UsersController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> RegisterAsync(RegisterCommand command)
     {
-        var userId = await _mediator.Send(command);
+        var tokens = await _mediator.Send(command);
 
-        return Ok(userId);
+        return Ok(tokens);
     }
 
     [HttpPost("login")]

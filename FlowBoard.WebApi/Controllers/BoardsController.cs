@@ -36,10 +36,9 @@ public class BoardsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetMyBoardsAsync(
-        [FromHeader(Name = "X-Current-User-Id")] Guid currentUserId)
+    public async Task<IActionResult> GetMyBoardsAsync()
     {
-        var query = new GetMyBoardsQuery(currentUserId);
+        var query = new GetMyBoardsQuery();
         var result = await _mediator.Send(query);
 
         if (result.IsFailed)
@@ -51,8 +50,7 @@ public class BoardsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetDetailsAsync(
-        [FromRoute] Guid id)
+    public async Task<IActionResult> GetDetailsAsync(Guid id)
     {
         var query = new GetBoardDetailsQuery(id);
         var result = await _mediator.Send(query);

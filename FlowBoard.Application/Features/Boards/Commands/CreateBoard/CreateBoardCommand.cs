@@ -5,6 +5,5 @@ namespace FlowBoard.Application.Features.Boards.Commands.CreateBoard;
 
 public record CreateBoardCommand(
     string Name, 
-    bool IsPublic, 
-    Guid CurrentUserId) 
+    bool IsPublic) 
     : IRequest<Result<Guid>>;

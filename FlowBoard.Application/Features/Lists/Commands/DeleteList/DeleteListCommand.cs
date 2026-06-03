@@ -5,6 +5,5 @@ namespace FlowBoard.Application.Features.Lists.Commands.DeleteList;
 
 public record DeleteListCommand(
     Guid ListId,
-    Guid BoardId,
-    Guid CurrentUserId) 
+    Guid BoardId) 
     : IRequest<Result<bool>>;

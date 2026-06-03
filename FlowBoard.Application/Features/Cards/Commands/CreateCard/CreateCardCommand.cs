@@ -7,6 +7,5 @@ public record CreateCardCommand(
     Guid ListId,
     Guid BoardId,
     string Name,
-    string? Description,
-    Guid CurrentUserId)
+    string? Description)
     : IRequest<Result<Guid>>;

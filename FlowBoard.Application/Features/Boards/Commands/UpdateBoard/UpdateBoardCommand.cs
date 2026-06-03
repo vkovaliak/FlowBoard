@@ -6,6 +6,5 @@ namespace FlowBoard.Application.Features.Boards.Commands.UpdateBoard;
 public record UpdateBoardCommand(
     Guid BoardId,
     string Name, 
-    bool IsPublic,
-    Guid CurrentUserId) 
+    bool IsPublic) 
     : IRequest<Result<bool>>;

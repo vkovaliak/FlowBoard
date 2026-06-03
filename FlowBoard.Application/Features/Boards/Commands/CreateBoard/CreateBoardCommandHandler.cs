@@ -9,20 +9,23 @@ namespace FlowBoard.Application.Features.Boards.Commands.CreateBoard;
 public class CreateBoardCommandHandler : IRequestHandler<CreateBoardCommand, Result<Guid>>
 {
     private readonly IUnitOfWorkFactory _uowFactory;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CreateBoardCommandHandler(IUnitOfWorkFactory uowFactory)
+    public CreateBoardCommandHandler(IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService)
     {
         _uowFactory = uowFactory;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Guid>> Handle(CreateBoardCommand command, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.GetCurrentUserId();
         var board = new Board
         {
             Id = Guid.NewGuid(),
             Name = command.Name,
             IsPublic = command.IsPublic,
-            CreatedBy = command.CurrentUserId
+            CreatedBy = currentUserId
         };
 
         using var uow = _uowFactory.Create();
@@ -30,7 +33,7 @@ public class CreateBoardCommandHandler : IRequestHandler<CreateBoardCommand, Res
         {
             await uow.BoardRepository.CreateAsync(board);
 
-            await uow.BoardRepository.AddMemberAsync(board.Id, command.CurrentUserId);
+            await uow.BoardRepository.AddMemberAsync(board.Id, currentUserId);
 
             for (int i = 0; i < BoardConstants.DefaultColumnNames.Length; i++)
             {
@@ -40,7 +43,7 @@ public class CreateBoardCommandHandler : IRequestHandler<CreateBoardCommand, Res
                     BoardId = board.Id,
                     Name = BoardConstants.DefaultColumnNames[i],
                     Position = i,
-                    CreatedBy = command.CurrentUserId
+                    CreatedBy = currentUserId
                 };
 
                 await uow.ListRepository.CreateAsync(defaultList);

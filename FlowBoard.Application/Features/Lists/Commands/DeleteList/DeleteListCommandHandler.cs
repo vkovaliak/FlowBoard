@@ -7,14 +7,18 @@ namespace FlowBoard.Application.Features.Lists.Commands.DeleteList;
 public class DeleteListCommandHandler : IRequestHandler<DeleteListCommand, Result<bool>>
 {
     private readonly IUnitOfWorkFactory _uowFactory;
+    private readonly ICurrentUserService _currentUserService;
 
-    public DeleteListCommandHandler(IUnitOfWorkFactory uowFactory)
+
+    public DeleteListCommandHandler(IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService)
     {
         _uowFactory = uowFactory;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<bool>> Handle(DeleteListCommand command, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.GetCurrentUserId();
         using var uow = _uowFactory.Create();
         try
         {
@@ -24,8 +28,8 @@ public class DeleteListCommandHandler : IRequestHandler<DeleteListCommand, Resul
                 return Result.Fail("Board not found");
             }
             
-            var isMember = await uow.BoardRepository.IsMemberAsync(command.BoardId, command.CurrentUserId);
-            if (!isMember && board.CreatedBy != command.CurrentUserId)
+            var isMember = await uow.BoardRepository.IsMemberAsync(command.BoardId, currentUserId);
+            if (!isMember && board.CreatedBy != currentUserId)
             {
                 return Result.Fail("You don't have access to this board");
             }

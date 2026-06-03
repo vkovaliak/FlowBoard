@@ -8,14 +8,18 @@ namespace FlowBoard.Application.Features.Lists.Commands.CreateList;
 public class CreateListCommandHandler : IRequestHandler<CreateListCommand, Result<Guid>>
 {
     private readonly IUnitOfWorkFactory _uowFactory;
+    private readonly ICurrentUserService _currentUserService;
+
     
-    public CreateListCommandHandler(IUnitOfWorkFactory uowFactory)
+    public CreateListCommandHandler(IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService)
     {
         _uowFactory = uowFactory;
+        _currentUserService = currentUserService;
     }
     
     public async Task<Result<Guid>> Handle(CreateListCommand command, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.GetCurrentUserId();
         using var uow = _uowFactory.Create();
         try
         {
@@ -24,9 +28,9 @@ public class CreateListCommandHandler : IRequestHandler<CreateListCommand, Resul
             {
                 return Result.Fail("Board not found");
             }
-            var isMember = await uow.BoardRepository.IsMemberAsync(command.BoardId, command.CurrentUserId);
+            var isMember = await uow.BoardRepository.IsMemberAsync(command.BoardId, currentUserId);
 
-            if (!isMember && board.CreatedBy != command.CurrentUserId)
+            if (!isMember && board.CreatedBy != currentUserId)
             {
                 return Result.Fail("You don't have access to this board");
             }
@@ -39,7 +43,7 @@ public class CreateListCommandHandler : IRequestHandler<CreateListCommand, Resul
                 BoardId = command.BoardId,
                 Name = command.Name,
                 Position = position,
-                CreatedBy = command.CurrentUserId
+                CreatedBy = currentUserId
             };
 
             await uow.ListRepository.CreateAsync(list);

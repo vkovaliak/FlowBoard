@@ -52,6 +52,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<To
 
             await uow.UserSessionRepository.CreateAsync(userSession);
 
+            uow.Commit();
+
             var tokenDto =  new TokenDto (
                 accessToken, 
                 refreshToken,

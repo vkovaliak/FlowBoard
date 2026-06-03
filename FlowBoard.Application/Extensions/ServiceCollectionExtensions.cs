@@ -1,5 +1,4 @@
 using System.Reflection;
-using FlowBoard.Application.Features.Users.Commands.CreateUser;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FlowBoard.Application.Extensions;

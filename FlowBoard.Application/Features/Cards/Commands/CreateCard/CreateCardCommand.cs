@@ -1,3 +1,4 @@
+using FluentResults;
 using MediatR;
 
 namespace FlowBoard.Application.Features.Cards.Commands.CreateCard;
@@ -8,4 +9,4 @@ public record CreateCardCommand(
     string Name,
     string? Description,
     Guid CurrentUserId)
-    : IRequest<Guid>;
+    : IRequest<Result<Guid>>;

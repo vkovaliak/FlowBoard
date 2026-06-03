@@ -1,3 +1,4 @@
+using FluentResults;
 using MediatR;
 
 namespace FlowBoard.Application.Features.Boards.Commands.UpdateBoard;
@@ -7,4 +8,4 @@ public record UpdateBoardCommand(
     string Name, 
     bool IsPublic,
     Guid CurrentUserId) 
-    : IRequest<bool>;
+    : IRequest<Result<bool>>;

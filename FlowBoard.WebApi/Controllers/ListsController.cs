@@ -20,13 +20,13 @@ public class ListsConroller : ControllerBase
     public async Task<IActionResult> CreateAsync(CreateListCommand command)
     {
         var listId = await _mediator.Send(command);
-        return Ok(listId);
+        return Ok(listId.Value);
     }
 
     [HttpDelete]
     public async Task<IActionResult> DeleteAsync(DeleteListCommand command)
     {
         var result = await _mediator.Send(command);
-        return Ok(result);
+        return Ok(result.Value);
     }
 }

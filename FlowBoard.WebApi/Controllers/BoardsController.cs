@@ -27,7 +27,7 @@ public class BoardsController : ControllerBase
     {
         var boardId = await _mediator.Send(command);
 
-        return Ok(boardId);
+        return Ok(boardId.Value);
     }
 
     [HttpGet]
@@ -37,7 +37,7 @@ public class BoardsController : ControllerBase
         var query = new GetMyBoardsQuery(currentUserId);
         var result = await _mediator.Send(query);
         
-        return Ok(result);
+        return Ok(result.Value);
     }
 
     [HttpGet("{id:guid}")]
@@ -47,30 +47,34 @@ public class BoardsController : ControllerBase
         var query = new GetBoardDetailsQuery(id);
         var result = await _mediator.Send(query);
 
-        return Ok(result);
+        return Ok(result.Value);
     }
 
     [HttpPut]
     public async Task<IActionResult> UpdateAsync(UpdateBoardCommand command)
     {
         var result = await _mediator.Send(command);
-        return Ok(result);
+        return Ok(result.Value);
     }
 
     [HttpDelete]
     public async Task<IActionResult> DeleteAsync(DeleteBoardCommand command)
     {
         var result = await _mediator.Send(command);
-        return Ok(result);
+        return Ok(result.Value);
     }
 
     [HttpPost("invite")]
     public async Task<IActionResult> InviteMemberAsync(InviteMemberCommand command)
     {
         var result = await _mediator.Send(command);
+
+        if(result.IsFailed)
+        {
+            var errorMessage= result.Errors.First().Message;
+            return BadRequest(errorMessage);
+        }
         
-        return result
-            ? Ok(result)
-            : BadRequest("Something went wrong");
+        return Ok(result.Value);
     }
 }

@@ -1,3 +1,4 @@
+using FluentResults;
 using MediatR;
 
 namespace FlowBoard.Application.Features.Boards.Commands.DeleteBoard;
@@ -5,4 +6,4 @@ namespace FlowBoard.Application.Features.Boards.Commands.DeleteBoard;
 public record DeleteBoardCommand(
     Guid BoardId,
     Guid CurrentUserId) 
-    : IRequest<bool>;
+    : IRequest<Result<bool>>;

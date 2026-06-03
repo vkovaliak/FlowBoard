@@ -1,9 +1,10 @@
 using FlowBoard.Application.Abstractions;
+using FluentResults;
 using MediatR;
 
 namespace FlowBoard.Application.Features.Boards.Commands.InviteMember;
 
-public class InviteMemberCommandHandler : IRequestHandler<InviteMemberCommand, bool>
+public class InviteMemberCommandHandler : IRequestHandler<InviteMemberCommand, Result<bool>>
 {
     private readonly IUnitOfWorkFactory _uowFactory;
 
@@ -12,34 +13,33 @@ public class InviteMemberCommandHandler : IRequestHandler<InviteMemberCommand, b
         _uowFactory = uowFactory;
     }
 
-    public async Task<bool> Handle(InviteMemberCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(InviteMemberCommand request, CancellationToken cancellationToken)
     {
         using var uow = _uowFactory.Create();
         try
         {
             var board = await uow.BoardRepository.GetByIdAsync(request.BoardId);
-            if (board is null
-                || board.CreatedBy != request.CurrentUserId)
+            if (board is null)
             {
-                return false;
+                return Result.Fail("Board not found.");
             }
 
             var userToInvite = await uow.UserRepository.GetByEmailAsync(request.Email);
             if (userToInvite == null)
             {
-                return false;
+                return Result.Fail("User with this email does not exist.");
             }
 
             var isAlreadyMember = await uow.BoardRepository.IsMemberAsync(board.Id, userToInvite.Id);
             if (isAlreadyMember)
             {
-                return false;
+                return Result.Fail("This user is already a member of this board.");
             }
 
             await uow.BoardRepository.AddMemberAsync(board.Id, userToInvite.Id);
 
             uow.Commit();
-            return true;
+            return Result.Ok(true);
         }
         catch
         {

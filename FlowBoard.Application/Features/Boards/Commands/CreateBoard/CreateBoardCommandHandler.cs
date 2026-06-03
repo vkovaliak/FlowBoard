@@ -1,11 +1,12 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.Constants;
 using FlowBoard.Domain.Entities;
+using FluentResults;
 using MediatR;
 
 namespace FlowBoard.Application.Features.Boards.Commands.CreateBoard;
 
-public class CreateBoardCommandHandler : IRequestHandler<CreateBoardCommand, Guid>
+public class CreateBoardCommandHandler : IRequestHandler<CreateBoardCommand, Result<Guid>>
 {
     private readonly IUnitOfWorkFactory _uowFactory;
 
@@ -14,7 +15,7 @@ public class CreateBoardCommandHandler : IRequestHandler<CreateBoardCommand, Gui
         _uowFactory = uowFactory;
     }
 
-    public async Task<Guid> Handle(CreateBoardCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(CreateBoardCommand command, CancellationToken cancellationToken)
     {
         var board = new Board
         {
@@ -47,7 +48,7 @@ public class CreateBoardCommandHandler : IRequestHandler<CreateBoardCommand, Gui
 
             uow.Commit();
 
-            return board.Id;
+            return Result.Ok(board.Id);
         }
         catch
         {

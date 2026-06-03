@@ -1,10 +1,11 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.DTOs.Boards;
+using FluentResults;
 using MediatR;
 
 namespace FlowBoard.Application.Features.Boards.Queries.GetBoardDetails;
 
-public class GetBoardDetailsQueryHandler : IRequestHandler<GetBoardDetailsQuery, BoardDetailsDto?>
+public class GetBoardDetailsQueryHandler : IRequestHandler<GetBoardDetailsQuery, Result<BoardDetailsDto?>>
 {
     private readonly IBoardRepository _boardRepository;
 
@@ -13,8 +14,9 @@ public class GetBoardDetailsQueryHandler : IRequestHandler<GetBoardDetailsQuery,
         _boardRepository = boardRepository;
     }
 
-    public async Task<BoardDetailsDto?> Handle(GetBoardDetailsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<BoardDetailsDto?>> Handle(GetBoardDetailsQuery request, CancellationToken cancellationToken)
     {
-        return await _boardRepository.GetDetailsAsync(request.BoardId);
+        var result = await _boardRepository.GetDetailsAsync(request.BoardId);
+        return Result.Ok(result);
     }
 }

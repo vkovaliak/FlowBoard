@@ -1,11 +1,12 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.DTOs.Auth;
 using FlowBoard.Domain.Entities;
+using FluentResults;
 using MediatR;
 
 namespace FlowBoard.Application.Features.Auth.Commands.Register;
 
-public class RegisterCommandHandler : IRequestHandler<RegisterCommand, TokenDto>
+public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<TokenDto>>
 {
     private readonly IUnitOfWorkFactory _uowFactory;
     private readonly IJwtProvider _jwtProvider;
@@ -16,7 +17,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, TokenDto>
         _jwtProvider = jwtProvider;
     }
 
-    public async Task<TokenDto> Handle(RegisterCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TokenDto>> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         using var uow = _uowFactory.Create();
         try
@@ -24,7 +25,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, TokenDto>
             var existingUser = await uow.UserRepository.GetByEmailAsync(request.Email);
             if (existingUser != null)
             {
-                throw new ArgumentException("User with this email already exists.");
+                return Result.Fail("User with this email already exists.");
             }
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -50,11 +51,15 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, TokenDto>
             };
 
             await uow.UserSessionRepository.CreateAsync(userSession);
-            return new TokenDto (
+
+            var tokenDto =  new TokenDto (
                 accessToken, 
                 refreshToken,
                 accessTokenExpiry,
-                refreshTokenExpiry);
+                refreshTokenExpiry
+            );
+
+            return Result.Ok(tokenDto);
 
         }
         catch

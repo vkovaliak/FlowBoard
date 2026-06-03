@@ -19,6 +19,6 @@ public class CardsConroller : ControllerBase
     public async Task<IActionResult> CreateAsync(CreateCardCommand command)
     {
         var cardId = await _mediator.Send(command);
-        return Ok(cardId);
+        return Ok(cardId.Value);
     }
 }

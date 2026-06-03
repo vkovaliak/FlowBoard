@@ -1,11 +1,12 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.DTOs.Auth;
 using FlowBoard.Domain.Entities;
+using FluentResults;
 using MediatR;
 
 namespace FlowBoard.Application.Features.Auth.Commands.RefreshToken;
 
-public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, TokenDto>
+public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, Result<TokenDto>>
 {
     private readonly IUnitOfWorkFactory _uowFactory;
     private readonly IJwtProvider _jwtProvider;
@@ -16,27 +17,27 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, T
         _jwtProvider = jwtProvider;
     }
 
-    public async Task<TokenDto> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TokenDto>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
         using var uow = _uowFactory.Create();
         try
         {
             var session = await uow.UserSessionRepository.GetByTokenAsync(request.RefreshToken);
-            if (session == null)
+            if (session is null)
             {
-                throw new UnauthorizedAccessException("Invalid refresh token.");
+                return Result.Fail("Invalid refresh token.");
             }
 
             if (session.ExpiryTime < DateTime.UtcNow)
             {
                 await uow.UserSessionRepository.DeleteAsync(session);
-                throw new UnauthorizedAccessException("Refresh token expired. Please login again.");
+                return Result.Fail("Refresh token expired. Please login again.");
             }
 
             var user = await uow.UserRepository.GetByIdAsync(session.UserId);
-            if (user == null)
+            if (user is null)
             {
-                throw new UnauthorizedAccessException("User not found.");
+                return Result.Fail("User not found.");
             }
 
             var (newAccessToken, accessTokenExpiry) = _jwtProvider.GenerateAccessToken(user.Id, user.EmailAddress);
@@ -55,12 +56,14 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, T
 
             uow.Commit();
 
-            return new TokenDto(
+            var tokenDto =  new TokenDto(
                 newAccessToken, 
                 newRefreshToken,
                 accessTokenExpiry,
                 refreshTokenExpiry
             );
+
+            return Result.Ok(tokenDto);
         }
         catch
         {

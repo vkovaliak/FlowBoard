@@ -23,7 +23,7 @@ public class UsersController : ControllerBase
     {
         var tokens = await _mediator.Send(command);
 
-        return Ok(tokens);
+        return Ok(tokens.Value);
     }
 
     [HttpPost("login")]
@@ -31,7 +31,7 @@ public class UsersController : ControllerBase
     {
         var tokens = await _mediator.Send(command);
         
-        return Ok(tokens);
+        return Ok(tokens.Value);
     }
 
     [HttpPost("refresh")]
@@ -39,6 +39,6 @@ public class UsersController : ControllerBase
     {
         var tokens = await _mediator.Send(command);
         
-        return Ok(tokens);
+        return Ok(tokens.Value);
     }
 }

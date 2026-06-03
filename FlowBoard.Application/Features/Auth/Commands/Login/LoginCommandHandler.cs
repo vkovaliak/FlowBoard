@@ -1,11 +1,12 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.DTOs.Auth;
 using FlowBoard.Domain.Entities;
+using FluentResults;
 using MediatR;
 
 namespace FlowBoard.Application.Features.Auth.Commands.Login;
 
-public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
+public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<TokenDto>>
 {
     private readonly IUserRepository _userRepository;
     private readonly IUserSessionRepository _userSessionRepository;
@@ -18,15 +19,18 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
         _jwtProvider = jwtProvider;
     }
 
-    public async Task<TokenDto> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TokenDto>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByEmailAsync(request.Email) 
-            ?? throw new UnauthorizedAccessException("Invalid email.");
+        var user = await _userRepository.GetByEmailAsync(request.Email);
+        if (user is null)
+        {
+            return Result.Fail("Invalid email.");
+        }
 
         var isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
         if (!isPasswordValid)
         {
-            throw new UnauthorizedAccessException("Invalid password.");
+            return Result.Fail("Invalid password.");
         }
         
         var (accessToken, accessTokenExpiry) = _jwtProvider.GenerateAccessToken(user.Id, user.EmailAddress);
@@ -43,11 +47,13 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
 
         await _userSessionRepository.CreateAsync(userSession);
 
-        return new TokenDto(
+        var tokenDto = new TokenDto(
             accessToken, 
             refreshToken,
             accessTokenExpiry,
             refreshTokenExpiry
         );
+
+        return Result.Ok(tokenDto);
     }
 }

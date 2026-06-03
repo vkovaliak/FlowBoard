@@ -9,11 +9,11 @@ namespace FlowBoard.WebApi.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class UsersController : ControllerBase
+public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
 
-    public UsersController(IMediator mediator)
+    public AuthController(IMediator mediator)
     {
         _mediator = mediator;
     }
@@ -21,24 +21,39 @@ public class UsersController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> RegisterAsync(RegisterCommand command)
     {
-        var tokens = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-        return Ok(tokens.Value);
+        if(result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> LoginAsync(LoginCommand command)
     {
-        var tokens = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
         
-        return Ok(tokens.Value);
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
     }
 
     [HttpPost("refresh")]
     public async Task<IActionResult> RefreshAsync(RefreshTokenCommand command)
     {
-        var tokens = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
         
-        return Ok(tokens.Value);
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
     }
 }

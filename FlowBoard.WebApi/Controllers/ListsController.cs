@@ -19,14 +19,26 @@ public class ListsConroller : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateAsync(CreateListCommand command)
     {
-        var listId = await _mediator.Send(command);
-        return Ok(listId.Value);
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
     }
 
     [HttpDelete]
     public async Task<IActionResult> DeleteAsync(DeleteListCommand command)
     {
         var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
         return Ok(result.Value);
     }
 }

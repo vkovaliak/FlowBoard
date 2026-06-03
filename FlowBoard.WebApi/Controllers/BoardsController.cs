@@ -25,9 +25,14 @@ public class BoardsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateAsync(CreateBoardCommand command)
     {
-        var boardId = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-        return Ok(boardId.Value);
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
     }
 
     [HttpGet]
@@ -36,7 +41,12 @@ public class BoardsController : ControllerBase
     {
         var query = new GetMyBoardsQuery(currentUserId);
         var result = await _mediator.Send(query);
-        
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
         return Ok(result.Value);
     }
 
@@ -47,6 +57,11 @@ public class BoardsController : ControllerBase
         var query = new GetBoardDetailsQuery(id);
         var result = await _mediator.Send(query);
 
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
         return Ok(result.Value);
     }
 
@@ -54,6 +69,12 @@ public class BoardsController : ControllerBase
     public async Task<IActionResult> UpdateAsync(UpdateBoardCommand command)
     {
         var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
         return Ok(result.Value);
     }
 
@@ -61,6 +82,12 @@ public class BoardsController : ControllerBase
     public async Task<IActionResult> DeleteAsync(DeleteBoardCommand command)
     {
         var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
         return Ok(result.Value);
     }
 
@@ -69,10 +96,9 @@ public class BoardsController : ControllerBase
     {
         var result = await _mediator.Send(command);
 
-        if(result.IsFailed)
+        if (result.IsFailed)
         {
-            var errorMessage= result.Errors.First().Message;
-            return BadRequest(errorMessage);
+            return BadRequest(result.Errors.First().Message);
         }
         
         return Ok(result.Value);

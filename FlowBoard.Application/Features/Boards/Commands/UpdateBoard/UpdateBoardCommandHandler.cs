@@ -8,21 +8,25 @@ namespace FlowBoard.Application.Features.Boards.Commands.UpdateBoard;
 public class UpdateBoardCommandHandler : IRequestHandler<UpdateBoardCommand, Result<bool>>
 {
     private readonly IBoardRepository _boardRepository;
+    private readonly ICurrentUserService _currentUserService;
 
-    public UpdateBoardCommandHandler(IBoardRepository boardRepository)
+
+    public UpdateBoardCommandHandler(IBoardRepository boardRepository, ICurrentUserService currentUserService)
     {
         _boardRepository = boardRepository;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<bool>> Handle(UpdateBoardCommand request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.GetId();
         var board = await _boardRepository.GetByIdAsync(request.BoardId);
         if (board == null)
         {
             return Result.Fail("Board not found.");
         }
 
-        if (board.CreatedBy != request.CurrentUserId)
+        if (board.CreatedBy != currentUserId)
         {
             return Result.Fail("You do not have permission to update this board.");
         }

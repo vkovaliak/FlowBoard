@@ -19,8 +19,5 @@ public class CreateCardCommandValidator : AbstractValidator<CreateCardCommand>
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage("Description must not exceed 500 characters.")
             .When(x => !string.IsNullOrEmpty(x.Description));
-
-        RuleFor(x => x.CurrentUserId)
-            .NotEmpty().WithMessage("User ID is missing.");
     }
 }

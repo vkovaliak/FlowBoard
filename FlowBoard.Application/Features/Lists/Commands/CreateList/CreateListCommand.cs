@@ -5,6 +5,5 @@ namespace FlowBoard.Application.Features.Lists.Commands.CreateList;
 
 public record CreateListCommand(
     Guid BoardId,
-    string Name,
-    Guid CurrentUserId)
+    string Name)
     : IRequest<Result<Guid>>;

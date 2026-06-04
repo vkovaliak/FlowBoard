@@ -8,14 +8,18 @@ namespace FlowBoard.Application.Features.Cards.Commands.CreateCard;
 public class CreateCardCommandHandler : IRequestHandler<CreateCardCommand, Result<Guid>>
 {
     private readonly IUnitOfWorkFactory _uowFactory;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CreateCardCommandHandler(IUnitOfWorkFactory uowFactory)
+
+    public CreateCardCommandHandler(IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService)
     {
         _uowFactory = uowFactory;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Guid>> Handle(CreateCardCommand command, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.GetId();
         using var uow = _uowFactory.Create();
         try
         {
@@ -25,9 +29,9 @@ public class CreateCardCommandHandler : IRequestHandler<CreateCardCommand, Resul
                 return Result.Fail("Board not found");
             }
 
-            var isMember = await uow.BoardRepository.IsMemberAsync(command.BoardId, command.CurrentUserId);
+            var isMember = await uow.BoardRepository.IsMemberAsync(command.BoardId, currentUserId);
 
-            if (!isMember && board.CreatedBy != command.CurrentUserId)
+            if (!isMember && board.CreatedBy != currentUserId)
             {
                 return Result.Fail("You don't have access to this board");
             }
@@ -41,7 +45,7 @@ public class CreateCardCommandHandler : IRequestHandler<CreateCardCommand, Resul
                 Name = command.Name,
                 Description = command.Description,
                 Position = position,
-                CreatedBy = command.CurrentUserId,
+                CreatedBy = currentUserId,
             };
 
             await uow.CardRepository.CreateAsync(card);

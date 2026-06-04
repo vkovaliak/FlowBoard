@@ -20,6 +20,8 @@ builder.Services.AddPersistence();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();

@@ -18,7 +18,7 @@ public class DeleteListCommandHandler : IRequestHandler<DeleteListCommand, Resul
 
     public async Task<Result<bool>> Handle(DeleteListCommand command, CancellationToken cancellationToken)
     {
-        var currentUserId = _currentUserService.GetCurrentUserId();
+        var currentUserId = _currentUserService.GetId();
         using var uow = _uowFactory.Create();
         try
         {

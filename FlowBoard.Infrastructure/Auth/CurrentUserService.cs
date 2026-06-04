@@ -13,7 +13,7 @@ public class CurrentUserService : ICurrentUserService
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public Guid GetCurrentUserId()
+    public Guid GetId()
     {
         var user = _httpContextAccessor.HttpContext?.User;
 

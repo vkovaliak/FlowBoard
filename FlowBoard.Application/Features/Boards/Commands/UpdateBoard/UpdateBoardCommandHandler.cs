@@ -19,7 +19,7 @@ public class UpdateBoardCommandHandler : IRequestHandler<UpdateBoardCommand, Res
 
     public async Task<Result<bool>> Handle(UpdateBoardCommand request, CancellationToken cancellationToken)
     {
-        var currentUserId = _currentUserService.GetCurrentUserId();
+        var currentUserId = _currentUserService.GetId();
         var board = await _boardRepository.GetByIdAsync(request.BoardId);
         if (board == null)
         {

@@ -1,11 +1,13 @@
 using FlowBoard.Application.Features.Cards.Commands.CreateCard;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlowBoard.WebApi.Controllers;
 
 [ApiController]
 [Route("api/cards")]
+[Authorize]
 public class CardsConroller : ControllerBase
 {
     private readonly IMediator _mediator;

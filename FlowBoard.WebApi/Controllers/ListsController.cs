@@ -1,12 +1,14 @@
 using FlowBoard.Application.Features.Lists.Commands.CreateList;
 using FlowBoard.Application.Features.Lists.Commands.DeleteList;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlowBoard.WebApi.Controllers;
 
 [ApiController]
 [Route("api/lists")]
+[Authorize]
 public class ListsConroller : ControllerBase
 {
     private readonly IMediator _mediator;

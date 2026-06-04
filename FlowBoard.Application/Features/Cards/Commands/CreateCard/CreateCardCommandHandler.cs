@@ -19,7 +19,7 @@ public class CreateCardCommandHandler : IRequestHandler<CreateCardCommand, Resul
 
     public async Task<Result<Guid>> Handle(CreateCardCommand command, CancellationToken cancellationToken)
     {
-        var currentUserId = _currentUserService.GetCurrentUserId();
+        var currentUserId = _currentUserService.GetId();
         using var uow = _uowFactory.Create();
         try
         {

@@ -19,7 +19,7 @@ public class CreateBoardCommandHandler : IRequestHandler<CreateBoardCommand, Res
 
     public async Task<Result<Guid>> Handle(CreateBoardCommand command, CancellationToken cancellationToken)
     {
-        var currentUserId = _currentUserService.GetCurrentUserId();
+        var currentUserId = _currentUserService.GetId();
         var board = new Board
         {
             Id = Guid.NewGuid(),

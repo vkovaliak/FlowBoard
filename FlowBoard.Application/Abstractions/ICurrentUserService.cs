@@ -2,5 +2,5 @@ namespace FlowBoard.Application.Abstractions;
 
 public interface ICurrentUserService
 {
-    Guid GetCurrentUserId();
+    Guid GetId();
 }

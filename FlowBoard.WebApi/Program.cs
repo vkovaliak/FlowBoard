@@ -7,10 +7,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using FlowBoard.Infrastructure.Extensions;
+using FlowBoard.WebApi.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection(DatabaseOptions.SectionName));
+builder.Services.Configure<DatabaseOptions>(
+    builder.Configuration.GetSection(DatabaseOptions.SectionName));
 builder.Services.AddSingleton<DatabaseInitializer>();
 
 builder.Services.AddApplication();
@@ -22,9 +24,12 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+builder.Services.Configure<JwtOptions>(
+    builder.Configuration.GetSection(JwtOptions.SectionName));
 
-var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
+var jwtOptions = builder.Configuration
+    .GetSection(JwtOptions.SectionName)
+    .Get<JwtOptions>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -37,9 +42,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtOptions!.Issuer,
             ValidAudience = jwtOptions!.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions!.SecretKey))
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtOptions!.SecretKey))
         };
     });
+
+var corsOptions = builder.Configuration
+    .GetSection(CorsOptions.SectionName)
+    .Get<CorsOptions>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(corsOptions!.PolicyName, policy =>
+    {
+        policy.WithOrigins(corsOptions.AllowedOrigin)
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
@@ -50,6 +70,8 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(corsOptions!.PolicyName);
 
 app.UseAuthentication();
 app.UseAuthorization();

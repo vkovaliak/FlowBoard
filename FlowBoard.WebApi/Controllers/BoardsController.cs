@@ -8,7 +8,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
-namespace FlowBoard.WebAPI.Controllers;
+namespace FlowBoard.WebApi.Controllers;
 
 [ApiController]
 [Route("api/boards")]

@@ -33,6 +33,8 @@ public class UpdateBoardCommandHandler : IRequestHandler<UpdateBoardCommand, Res
 
         board.Name = request.Name;
         board.IsPublic = request.IsPublic;
+        board.UpdatedAt = DateTime.UtcNow;
+        board.UpdatedBy = currentUserId;
 
         var result =  await _boardRepository.UpdateAsync(board);
         if (!result)

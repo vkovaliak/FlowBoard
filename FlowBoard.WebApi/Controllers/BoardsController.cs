@@ -63,10 +63,11 @@ public class BoardsController : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpPut]
-    public async Task<IActionResult> UpdateAsync(UpdateBoardCommand command)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateAsync(Guid id, UpdateBoardCommand command)
     {
-        var result = await _mediator.Send(command);
+        var updatedCommand = command with { BoardId = id };
+        var result = await _mediator.Send(updatedCommand);
 
         if (result.IsFailed)
         {
@@ -76,9 +77,10 @@ public class BoardsController : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpDelete]
-    public async Task<IActionResult> DeleteAsync(DeleteBoardCommand command)
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteAsync(Guid id)
     {
+        var command = new DeleteBoardCommand(id);
         var result = await _mediator.Send(command);
 
         if (result.IsFailed)

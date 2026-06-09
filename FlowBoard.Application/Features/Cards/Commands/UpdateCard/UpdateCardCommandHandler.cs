@@ -2,24 +2,24 @@ using FlowBoard.Application.Abstractions;
 using FluentResults;
 using MediatR;
 
-namespace FlowBoard.Application.Features.Lists.Commands.UpdateList;
+namespace FlowBoard.Application.Features.Cards.Commands.UpdateCard;
 
-public class UpdateListCommandHandler : IRequestHandler<UpdateListCommand, Result<bool>>
+public class UpdateCardCommandHandler : IRequestHandler<UpdateCardCommand, Result<bool>>
 {
     private readonly IUnitOfWorkFactory _uowFactory;
     private readonly ICurrentUserService _currentUserService;
 
-    public UpdateListCommandHandler(IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService)
+    public UpdateCardCommandHandler(IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService)
     {
         _uowFactory = uowFactory;
         _currentUserService = currentUserService;
     }
 
-    public async Task<Result<bool>> Handle(UpdateListCommand command, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(UpdateCardCommand command, CancellationToken cancellationToken)
     {
         var currentUserId = _currentUserService.GetId();
         using var uow = _uowFactory.Create();
-        
+
         try
         {
             var board = await uow.BoardRepository.GetByIdAsync(command.BoardId);
@@ -27,7 +27,7 @@ public class UpdateListCommandHandler : IRequestHandler<UpdateListCommand, Resul
             {
                 return Result.Fail("Board not found");
             }
-
+            
             var isMember = await uow.BoardRepository.IsMemberAsync(command.BoardId, currentUserId);
             if (!isMember && board.CreatedBy != currentUserId)
             {
@@ -35,16 +35,23 @@ public class UpdateListCommandHandler : IRequestHandler<UpdateListCommand, Resul
             }
 
             var list = await uow.ListRepository.GetByIdAsync(command.ListId);
-            if (list is null)
+            if (list is null || list.BoardId != command.BoardId) 
             {
-                return Result.Fail("List is not found");
+                return Result.Fail("List not found on this board");
             }
 
-            list.Name = command.Name;
-            list.UpdatedAt = DateTime.UtcNow;
-            list.UpdatedBy = currentUserId;
+            var card = await uow.CardRepository.GetByIdAsync(command.CardId);
+            if (card is null)
+            {
+                return Result.Fail("Card not found");
+            }
 
-            var result = await uow.ListRepository.UpdateAsync(list);
+            card.Name = command.Name;
+            card.Description = command.Description;
+            card.UpdatedAt = DateTime.UtcNow;
+            card.UpdatedBy = currentUserId;
+
+            var result = await uow.CardRepository.UpdateAsync(card);
             uow.Commit();
 
             return Result.Ok(result);
@@ -52,7 +59,7 @@ public class UpdateListCommandHandler : IRequestHandler<UpdateListCommand, Resul
         catch
         {
             uow.Rollback();
-            return Result.Fail("An error occurred while updating the list");
+            return Result.Fail("An error occurred while updating the card");
         }
     }
 }

@@ -91,10 +91,11 @@ public class BoardsController : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpPost("invite")]
-    public async Task<IActionResult> InviteMemberAsync(InviteMemberCommand command)
+    [HttpPost("{boardId:guid}/invite")]
+    public async Task<IActionResult> InviteMemberAsync(Guid boardId, InviteMemberCommand command)
     {
-        var result = await _mediator.Send(command);
+        var updatedCommand = command with { BoardId = boardId };
+        var result = await _mediator.Send(updatedCommand);
 
         if (result.IsFailed)
         {

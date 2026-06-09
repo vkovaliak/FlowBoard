@@ -46,7 +46,16 @@ public class DeleteCardCommandHandler : IRequestHandler<DeleteCardCommand, Resul
                 return Result.Fail("Card not found");
             }
 
+            var deletedPosition = card.Position;
+            var listId = card.ListId;
+
             var result = await uow.CardRepository.DeleteAsync(card);
+
+            if (result)
+            {
+                await uow.CardRepository.ShiftPositionsAfterDeleteAsync(
+                    listId, deletedPosition);
+            }
             
             uow.Commit();
             return Result.Ok(result);

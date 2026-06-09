@@ -40,7 +40,17 @@ public class DeleteListCommandHandler : IRequestHandler<DeleteListCommand, Resul
                 return Result.Fail("List is not found");
             }
 
+            var deletedPosition = list.Position;
+            var boardId = list.BoardId;
+
             var result = await uow.ListRepository.DeleteAsync(list);
+
+            if (result)
+            {
+                await uow.ListRepository.ShiftPositionsAfterDeleteAsync(
+                    boardId, deletedPosition);
+            }
+
             uow.Commit();
 
             return Result.Ok(result);

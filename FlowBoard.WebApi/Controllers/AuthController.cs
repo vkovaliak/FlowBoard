@@ -1,4 +1,5 @@
 using FlowBoard.Application.Features.Auth.Commands.Login;
+using FlowBoard.Application.Features.Auth.Commands.Logout;
 using FlowBoard.Application.Features.Auth.Commands.RefreshToken;
 using FlowBoard.Application.Features.Auth.Commands.Register;
 using FlowBoard.Domain.DTOs.Auth;
@@ -46,6 +47,19 @@ public class AuthController : ControllerBase
 
     [HttpPost("refresh")]
     public async Task<IActionResult> RefreshAsync(RefreshTokenCommand command)
+    {
+        var result = await _mediator.Send(command);
+        
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> LogouthAsync(LogoutCommand command)
     {
         var result = await _mediator.Send(command);
         

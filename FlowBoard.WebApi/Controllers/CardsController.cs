@@ -1,5 +1,6 @@
 using FlowBoard.Application.Features.Cards.Commands.CreateCard;
 using FlowBoard.Application.Features.Cards.Commands.DeleteCard;
+using FlowBoard.Application.Features.Cards.Commands.MoveCard;
 using FlowBoard.Application.Features.Cards.Commands.UpdateCard;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -67,6 +68,29 @@ public class CardsConroller : ControllerBase
             ListId: listId);
         
         var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPut("{boardId:guid}/card/{cardId:guid}/move")]
+    public async Task<IActionResult> MoveAsync(
+        Guid boardId, 
+        Guid cardId, 
+        MoveCardCommand command)
+    {
+        var updatedCommand = new MoveCardCommand(
+            BoardId: boardId,
+            CardId: cardId,
+            NewListId: command.NewListId,
+            NewPosition: command.NewPosition
+        );
+
+        var result = await _mediator.Send(updatedCommand);
 
         if (result.IsFailed)
         {

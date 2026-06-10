@@ -37,4 +37,40 @@ public class ListRepository : BaseRepository<ListEntity, Guid>, IListRepository
             new { BoardId = boardId, DeletedPosition = deletedPosition }, 
             _transaction);
     }
+
+    public async Task ShiftPositionsOnMoveAsync(
+        Guid boardId, int oldPosition, int newPosition)
+    {
+        string sql = string.Empty;
+
+        if (oldPosition < newPosition)
+        {
+            sql = """
+                UPDATE Lists 
+                SET Position = Position - 1 
+                WHERE BoardId = @BoardId 
+                  AND Position > @OldPosition 
+                  AND Position <= @NewPosition;
+                """;
+        }
+        else
+        {
+            sql = """
+                UPDATE Lists 
+                SET Position = Position + 1 
+                WHERE BoardId = @BoardId 
+                  AND Position >= @NewPosition 
+                  AND Position < @OldPosition;
+                """;
+        }
+
+        await _connection.ExecuteAsync(sql, 
+            new { 
+                BoardId = boardId, 
+                OldPosition = oldPosition, 
+                NewPosition = newPosition 
+            }, 
+            _transaction);
+    }
+
 }

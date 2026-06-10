@@ -15,7 +15,26 @@ public class ListRepository : BaseRepository<ListEntity, Guid>, IListRepository
 
     public async Task<int> GetNextPositionAsync(Guid boardId)
     {
-        const string sql = "SELECT ISNULL (MAX(Position), -1) + 1 FROM Lists WHERE BoardId = @BoardId;";
-        return await _connection.QueryFirstOrDefaultAsync<int>(sql, new { BoardId = boardId }, _transaction);
+        const string sql = """
+            SELECT ISNULL (MAX(Position), -1) + 1 
+            FROM Lists WHERE BoardId = @BoardId;
+            """;
+            
+        return await _connection.QueryFirstOrDefaultAsync<int>(sql, 
+            new { BoardId = boardId }, 
+            _transaction);
+    }
+
+    public async Task ShiftPositionsAfterDeleteAsync(Guid boardId, int deletedPosition)
+    {
+        const string sql = """
+            UPDATE Lists 
+            SET Position = Position - 1 
+            WHERE BoardId = @BoardId AND Position > @DeletedPosition;
+            """;
+
+        await _connection.ExecuteAsync(sql, 
+            new { BoardId = boardId, DeletedPosition = deletedPosition }, 
+            _transaction);
     }
 }

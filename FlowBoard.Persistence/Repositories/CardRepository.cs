@@ -36,4 +36,50 @@ public class CardRepository : BaseRepository<Card, Guid>, ICardRepository
             new { ListId = listId, DeletedPosition = deletedPosition }, 
             _transaction);
     }
+
+    public async Task ShiftPositionsOnMoveAsync(
+        Guid fromListId, Guid toListId, int oldPosition, int newPosition)
+    {
+        const string sql = """
+            IF @FromListId = @ToListId
+            BEGIN
+                IF @OldPosition > @NewPosition
+                BEGIN
+                    UPDATE Cards
+                    SET Position = Position + 1
+                    WHERE ListId = @FromListId 
+                    AND Position >= @NewPosition 
+                    AND Position < @OldPosition;
+                END
+                ELSE
+                BEGIN
+                    UPDATE Cards
+                    SET Position = Position - 1
+                    WHERE ListId = @FromListId 
+                    AND Position > @OldPosition 
+                    AND Position <= @NewPosition;
+                END
+            END
+            ELSE
+            BEGIN
+                UPDATE Cards
+                SET Position = Position + 1
+                WHERE ListId = @ToListId 
+                AND Position >= @NewPosition;
+
+                UPDATE Cards
+                SET Position = Position - 1
+                WHERE ListId = @FromListId 
+                AND Position > @OldPosition;
+            END
+            """;
+
+        await _connection.ExecuteAsync(sql, new
+        {
+            FromListId = fromListId,
+            ToListId = toListId,
+            OldPosition = oldPosition,
+            NewPosition = newPosition
+        }, _transaction);
+    }
 }

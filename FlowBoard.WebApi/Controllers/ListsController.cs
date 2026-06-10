@@ -1,5 +1,6 @@
 using FlowBoard.Application.Features.Lists.Commands.CreateList;
 using FlowBoard.Application.Features.Lists.Commands.DeleteList;
+using FlowBoard.Application.Features.Lists.Commands.MoveList;
 using FlowBoard.Application.Features.Lists.Commands.UpdateList;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -56,6 +57,23 @@ public class ListsConroller : ControllerBase
         var command = new DeleteListCommand(ListId: listId, BoardId: boardId);
         
         var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPut("{boardId:guid}/list/{listId:guid}/move")]
+    public async Task<IActionResult> MoveAsync(Guid boardId, 
+        Guid listId, MoveListCommand command)
+    {
+        var updatedCommand = new MoveListCommand(
+            boardId, listId, command.NewPosition);
+        
+        var result = await _mediator.Send(updatedCommand);
 
         if (result.IsFailed)
         {

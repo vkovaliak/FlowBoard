@@ -1,8 +1,11 @@
 using FlowBoard.Application.Features.Comments.Commands.CreateComment;
 using FlowBoard.Application.Features.Comments.Queries.GetCommentsByCardId;
+using FlowBoard.Domain.Constants;
+using FlowBoard.WebApi.Hubs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FlowBoard.WebApi.Controllers;
 
@@ -12,10 +15,13 @@ namespace FlowBoard.WebApi.Controllers;
 public class CommentConroller : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IHubContext<CommentHub> _hubContext;
 
-    public CommentConroller(IMediator mediator)
+    public CommentConroller(
+        IMediator mediator, IHubContext<CommentHub> hubContext)
     {
         _mediator = mediator;
+        _hubContext = hubContext;
     }
 
     [HttpPost("card/{cardId:guid}")]
@@ -29,6 +35,9 @@ public class CommentConroller : ControllerBase
         {
             return BadRequest(result.Errors.First().Message);
         }
+
+        await _hubContext.Clients.Group(cardId.ToString())
+            .SendAsync(HubMethods.ReceiveNewComment, result);
 
         return Ok(result.Value);
     }

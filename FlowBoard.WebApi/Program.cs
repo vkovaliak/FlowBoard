@@ -8,6 +8,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using FlowBoard.Infrastructure.Extensions;
 using FlowBoard.WebApi.Configurations;
+using FlowBoard.WebApi.Hubs;
+using FlowBoard.Domain.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,7 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 builder.Services.AddPersistence();
 
+builder.Services.AddSignalR();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
@@ -81,5 +84,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.MapHub<CommentHub>(HubRoutes.Comments);
 app.MapControllers();
 app.Run();

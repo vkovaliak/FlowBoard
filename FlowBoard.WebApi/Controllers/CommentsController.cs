@@ -39,7 +39,7 @@ public class CommentConroller : ControllerBase
         }
 
         await _hubContext.Clients.Group(cardId.ToString())
-            .SendAsync(HubMethods.ReceiveNewComment, result.Value);
+            .SendAsync(HubMethods.CommentUpdated, result.Value);
 
         return Ok(result.Value);
     }
@@ -72,7 +72,7 @@ public class CommentConroller : ControllerBase
         }
 
         await _hubContext.Clients.Group(cardId.ToString())
-            .SendAsync(HubMethods.ReceiveNewComment, commentId);
+            .SendAsync(HubMethods.CommentUpdated, commentId);
 
         return Ok(result.Value);
     }
@@ -90,7 +90,7 @@ public class CommentConroller : ControllerBase
         }
 
         await _hubContext.Clients.Group(cardId.ToString())
-            .SendAsync(HubMethods.ReceiveNewComment, commentId);
+            .SendAsync(HubMethods.CommentUpdated, commentId);
 
         return Ok(result.Value);
     }

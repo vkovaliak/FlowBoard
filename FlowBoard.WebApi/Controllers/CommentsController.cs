@@ -1,4 +1,6 @@
 using FlowBoard.Application.Features.Comments.Commands.CreateComment;
+using FlowBoard.Application.Features.Comments.Commands.DeleteComment;
+using FlowBoard.Application.Features.Comments.Commands.UpdateComment;
 using FlowBoard.Application.Features.Comments.Queries.GetCommentsByCardId;
 using FlowBoard.Domain.Constants;
 using FlowBoard.WebApi.Hubs;
@@ -37,7 +39,7 @@ public class CommentConroller : ControllerBase
         }
 
         await _hubContext.Clients.Group(cardId.ToString())
-            .SendAsync(HubMethods.ReceiveNewComment, result);
+            .SendAsync(HubMethods.CommentUpdated, result.Value);
 
         return Ok(result.Value);
     }
@@ -52,6 +54,43 @@ public class CommentConroller : ControllerBase
         {
             return BadRequest(result.Errors.First().Message);
         }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPut("card/{cardId:guid}/comment/{commentId:guid}")]
+    public async Task<IActionResult> UpdateAsync(
+        Guid cardId, Guid commentId, UpdateCommentCommand command)
+    {
+        var updatedCommand = command with { CardId = cardId, CommentId = commentId };
+        
+        var result = await _mediator.Send(updatedCommand);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        await _hubContext.Clients.Group(cardId.ToString())
+            .SendAsync(HubMethods.CommentUpdated, commentId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpDelete("card/{cardId:guid}/comment/{commentId:guid}")]
+    public async Task<IActionResult> DeleteAsync(Guid cardId, Guid commentId)
+    {
+        var command = new DeleteCommentCommand(cardId, commentId);
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        await _hubContext.Clients.Group(cardId.ToString())
+            .SendAsync(HubMethods.CommentUpdated, commentId);
 
         return Ok(result.Value);
     }

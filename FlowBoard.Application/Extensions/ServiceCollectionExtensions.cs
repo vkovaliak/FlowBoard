@@ -1,7 +1,6 @@
 using System.Reflection;
 using FlowBoard.Application.Behaviors;
 using FluentValidation;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FlowBoard.Application.Extensions;

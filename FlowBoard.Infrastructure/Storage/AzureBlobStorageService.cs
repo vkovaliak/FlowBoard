@@ -1,21 +1,16 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using FlowBoard.Application.Abstractions;
-using FlowBoard.Infrastructure.Configurations;
-using Microsoft.Extensions.Options;
 
 namespace FlowBoard.Infrastructure.Storage;
 
 public class AzureBlobStorageService : IFileStorageService
 {
     private readonly BlobServiceClient _blobServiceClient;
-    private readonly AzureBlobOptions _options;
 
-    public AzureBlobStorageService(IOptions<AzureBlobOptions> options)
+    public AzureBlobStorageService(BlobServiceClient blobServiceClient)
     {
-        _options = options.Value;
-        
-        _blobServiceClient = new BlobServiceClient(_options.ConnectionString);
+        _blobServiceClient = blobServiceClient;
     }
 
     public async Task<string> UploadAsync(

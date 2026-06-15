@@ -1,3 +1,5 @@
+using FlowBoard.Application.Features.Attachments.Commands.DeleteCardAttachment;
+using FlowBoard.Application.Features.Attachments.Commands.DeleteCommentAttachment;
 using FlowBoard.Application.Features.Attachments.Commands.UploadCardAttachment;
 using FlowBoard.Application.Features.Attachments.Commands.UploadCommentAttachment;
 using MediatR;
@@ -66,5 +68,33 @@ public class AttachmentController : ControllerBase
         }
 
         return Ok(result.Value);
+    }
+
+    [HttpDelete("card/{attachmentId:guid}")]
+    public async Task<IActionResult> DeleteCardAttachmentAsync(Guid attachmentId)
+    {
+        var command = new DeleteCardAttachmentCommand(attachmentId);
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result);
+    }
+
+    [HttpDelete("comment/{attachmentId:guid}")]
+    public async Task<IActionResult> DeleteCommentAttachmentAsync(Guid attachmentId)
+    {
+        var command = new DeleteCommentAttachmentCommand(attachmentId);
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result);
     }
 }

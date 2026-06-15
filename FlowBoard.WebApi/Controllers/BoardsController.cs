@@ -7,6 +7,9 @@ using FlowBoard.Application.Features.Boards.Queries.GetMyBoards;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
+using FlowBoard.WebApi.Hubs;
+using FlowBoard.Domain.Constants;
 
 namespace FlowBoard.WebApi.Controllers;
 
@@ -16,10 +19,12 @@ namespace FlowBoard.WebApi.Controllers;
 public class BoardsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IHubContext<BoardHub> _hubContext;
 
-    public BoardsController(IMediator mediator)
+    public BoardsController(IMediator mediator, IHubContext<BoardHub> hubContext)
     {
         _mediator = mediator;
+        _hubContext = hubContext;
     }
 
     [HttpPost]
@@ -74,6 +79,9 @@ public class BoardsController : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
+        await _hubContext.Clients.Group(id.ToString())
+            .SendAsync(HubMethods.BoardUpdated, id);
+
         return Ok(result.Value);
     }
 
@@ -88,6 +96,9 @@ public class BoardsController : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
+        await _hubContext.Clients.Group(id.ToString())
+            .SendAsync(HubMethods.BoardUpdated, id);
+
         return Ok(result.Value);
     }
 
@@ -101,6 +112,9 @@ public class BoardsController : ControllerBase
         {
             return BadRequest(result.Errors.First().Message);
         }
+
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
         
         return Ok(result.Value);
     }

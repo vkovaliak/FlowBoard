@@ -8,4 +8,4 @@ public record UploadCommentAttachmentCommand(
     Guid CommentId,
     Stream FileStream,
     string FileName)
-    : IRequest<Result<AttachmentResponse>>;
+    : IRequest<Result<AttachmentResponseDto>>;

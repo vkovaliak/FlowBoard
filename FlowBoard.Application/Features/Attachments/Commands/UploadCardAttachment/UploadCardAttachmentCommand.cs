@@ -8,4 +8,4 @@ public record UploadCardAttachmentCommand(
     Guid CardId,
     Stream FileStream,
     string FileName)
-    : IRequest<Result<AttachmentResponse>>;
+    : IRequest<Result<AttachmentResponseDto>>;

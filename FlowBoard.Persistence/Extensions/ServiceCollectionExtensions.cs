@@ -15,6 +15,8 @@ public static class DependencyInjection
 
         services.AddScoped<IBoardRepository, BoardRepository>();
         services.AddScoped<ICardRepository, CardRepository>();
+        services.AddScoped<ICardAttachmentRepository, CardAttachmentsRepository>();
+        services.AddScoped<ICommentAttachmentRepository, CommentAtachmentsRepository>();
         services.AddScoped<ICommentRepository, CommentRepository>();
         services.AddScoped<IListRepository, ListRepository>();
         services.AddScoped<IUserRepository, UserRepository>();

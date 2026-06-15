@@ -7,7 +7,7 @@ using FlowBoard.Domain.Constants;
 
 namespace FlowBoard.Application.Features.Attachments.Commands.UploadCommentAttachment;
 
-public class UploadCommentAttachmentCommandHandler : IRequestHandler<UploadCommentAttachmentCommand, Result<AttachmentResponse>>
+public class UploadCommentAttachmentCommandHandler : IRequestHandler<UploadCommentAttachmentCommand, Result<AttachmentResponseDto>>
 {
     private readonly IFileStorageService _fileStorageService;
     private readonly ICommentAttachmentRepository _commentAttachmentRepository;
@@ -23,7 +23,7 @@ public class UploadCommentAttachmentCommandHandler : IRequestHandler<UploadComme
         _currentUserService = currentUserService;
     }
 
-    public async Task<Result<AttachmentResponse>> Handle(
+    public async Task<Result<AttachmentResponseDto>> Handle(
         UploadCommentAttachmentCommand request, CancellationToken cancellationToken)
     {
         try
@@ -41,16 +41,17 @@ public class UploadCommentAttachmentCommandHandler : IRequestHandler<UploadComme
                 FileName = request.FileName,
                 BlobUrl = fileUrl,
                 ContentType = Path.GetExtension(request.FileName).ToLowerInvariant(),
-                UploadedBy = currentUserId
+                UploadetBy = currentUserId
             };
 
             await _commentAttachmentRepository.CreateAsync(attachment);
 
-            return Result.Ok(new AttachmentResponse(
-                attachment.Id,
-                attachment.FileName,
-                attachment.BlobUrl
-            ));
+            return Result.Ok(new AttachmentResponseDto
+            {
+                Id = attachment.Id,
+                FileName = attachment.FileName,
+                BlobUrl = attachment.BlobUrl
+            });
         }
         catch (Exception ex)
         {

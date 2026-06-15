@@ -1,6 +1,7 @@
 using System.Data;
 using Dapper;
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.DTOs.Attachments;
 using FlowBoard.Domain.DTOs.Boards;
 using FlowBoard.Domain.DTOs.Cards;
 using FlowBoard.Domain.DTOs.Lists;
@@ -81,11 +82,16 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 c.Id,
                 c.Name,
                 c.Description,
-                c.Position
+                c.Position,
+
+                a.Id,
+                a.FileName,
+                a.BlobUrl
 
             FROM Boards b
             LEFT JOIN Lists l ON l.BoardId = b.Id
             LEFT JOIN Cards c ON c.ListId = l.Id
+            LEFT JOIN CardAttachments a ON a.CardId = c.Id
 
             WHERE b.Id = @BoardId
 
@@ -95,14 +101,16 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
 
         var boardDictionary = new Dictionary<Guid, BoardDetailsDto>();
         var listDictionary = new Dictionary<Guid, ListDto>();
+        var cardDictionary = new Dictionary<Guid, CardDto>();
 
         var result = await _connection.QueryAsync<
             BoardDetailsDto,
             ListDto,
             CardDto,
+            AttachmentResponseDto,
             BoardDetailsDto>(
             sql,
-            (board, list, card) =>
+            (board, list, card, attachment) =>
             {
                 if (!boardDictionary.TryGetValue(board.Id, out var boardEntry))
                 {
@@ -126,14 +134,28 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
 
                     if (card is not null)
                     {
-                        listEntry.Cards.Add(card);
+                        if (!cardDictionary.TryGetValue(card.Id, out var cardEntry))
+                        {
+                            cardEntry = card;
+                            cardEntry.Attachments = [];
+                            cardDictionary.Add(cardEntry.Id, cardEntry);
+                            listEntry.Cards.Add(cardEntry);
+                        }
+
+                        if (attachment is not null && attachment.Id != Guid.Empty)
+                        {
+                            if (!cardEntry.Attachments.Any(x => x.Id == attachment.Id))
+                            {
+                                cardEntry.Attachments.Add(attachment);
+                            }
+                        }
                     }
                 }
 
                 return boardEntry;
             },
             new { BoardId = boardId },
-            splitOn: "Id,Id");
+            splitOn: "Id,Id,Id");
 
         return boardDictionary.Values.FirstOrDefault();
     }

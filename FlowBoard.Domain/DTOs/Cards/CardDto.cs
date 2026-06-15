@@ -1,3 +1,5 @@
+using FlowBoard.Domain.DTOs.Attachments;
+
 namespace FlowBoard.Domain.DTOs.Cards;
 
 public class CardDto
@@ -11,4 +13,6 @@ public class CardDto
     public string? Description { get; set; }
 
     public int Position { get; set; }
+
+    public List<AttachmentResponseDto> Attachments { get; set; } = [];
 }

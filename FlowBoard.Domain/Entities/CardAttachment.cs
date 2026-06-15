@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FlowBoard.Domain.Entities;
 
-[Table("CardAttachment")]
+[Table("CardAttachments")]
 public class CardAttachment : BaseEntity<Guid>
 {
     public Guid CardId { get; set; }
@@ -15,7 +15,7 @@ public class CardAttachment : BaseEntity<Guid>
     public required string ContentType { get; set; }
 
     [Editable(false)]
-    public DateTime UploadedAt { get; set; }
+    public DateTime UploadetAt { get; set; }
 
-    public Guid UploadedBy { get; set; }
+    public Guid UploadetBy { get; set; }
 }

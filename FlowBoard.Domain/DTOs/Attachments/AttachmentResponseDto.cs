@@ -1,6 +1,8 @@
 namespace FlowBoard.Domain.DTOs.Attachments;
 
-public record AttachmentResponse(
-    Guid Id,
-    string FileName,
-    string BlobUrl);
+public class AttachmentResponseDto
+{
+    public Guid Id { get; set; }
+    public string FileName { get; set; } = default!;
+    public string BlobUrl { get; set; } = default!;
+}

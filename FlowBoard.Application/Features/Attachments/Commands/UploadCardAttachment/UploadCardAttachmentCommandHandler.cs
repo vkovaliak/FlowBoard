@@ -7,7 +7,7 @@ using FlowBoard.Domain.Constants;
 
 namespace FlowBoard.Application.Features.Attachments.Commands.UploadCardAttachment;
 
-public class UploadCardAttachmentCommandHandler : IRequestHandler<UploadCardAttachmentCommand, Result<AttachmentResponse>>
+public class UploadCardAttachmentCommandHandler : IRequestHandler<UploadCardAttachmentCommand, Result<AttachmentResponseDto>>
 {
     private readonly IFileStorageService _fileStorageService;
     private readonly ICardAttachmentRepository _cardAttachmentRepository;
@@ -23,7 +23,7 @@ public class UploadCardAttachmentCommandHandler : IRequestHandler<UploadCardAtta
         _currentUserService = currentUserService;
     }
 
-    public async Task<Result<AttachmentResponse>> Handle(
+    public async Task<Result<AttachmentResponseDto>> Handle(
         UploadCardAttachmentCommand request, CancellationToken cancellationToken)
     {
         try
@@ -41,15 +41,17 @@ public class UploadCardAttachmentCommandHandler : IRequestHandler<UploadCardAtta
                 FileName = request.FileName,
                 BlobUrl = fileUrl,
                 ContentType = Path.GetExtension(request.FileName).ToLowerInvariant(),
-                UploadedBy = currentUserId
+                UploadetBy = currentUserId
             };
 
             await _cardAttachmentRepository.CreateAsync(attachment);
 
-            return Result.Ok(new AttachmentResponse(
-                attachment.Id,
-                attachment.FileName,
-                attachment.BlobUrl));
+            return Result.Ok(new AttachmentResponseDto
+            {
+                Id = attachment.Id,
+                FileName = attachment.FileName,
+                BlobUrl = attachment.BlobUrl
+            });
         }
         catch (Exception ex)
         {

@@ -1,4 +1,6 @@
 using FlowBoard.Domain.DTOs.Lists;
+using FlowBoard.Domain.DTOs.Users;
+using FlowBoard.Domain.Enums;
 
 namespace FlowBoard.Domain.DTOs.Boards;
 
@@ -14,5 +16,9 @@ public class BoardDetailsDto
     
     public DateTime CreatedAt { get; set; }
 
+    public BoardRole? UserRole { get; set; }
+    
     public List<ListDto> Lists { get; set; } = [];
+
+    public List<BoardMemberDto> Members { get; set; } = [];
 }

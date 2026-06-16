@@ -6,6 +6,7 @@ using FlowBoard.Domain.DTOs.Boards;
 using FlowBoard.Domain.DTOs.Cards;
 using FlowBoard.Domain.DTOs.Lists;
 using FlowBoard.Domain.Entities;
+using FlowBoard.Domain.Enums;
 
 namespace FlowBoard.Persistence.Repositories;
 
@@ -17,15 +18,15 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
     internal BoardRepository(IDbConnection connection, IDbTransaction transaction) 
         : base(connection, transaction) { }
 
-    public Task AddMemberAsync(Guid boardId, Guid userId)
+    public Task AddMemberAsync(Guid boardId, Guid userId, BoardRole role)
     {
         const string sql = @"
-            INSERT INTO BoardMembers (BoardId, UserId) 
-            VALUES (@BoardId, @UserId);";
+            INSERT INTO BoardMembers (BoardId, UserId, Role) 
+            VALUES (@BoardId, @UserId, @Role);";
 
         return _connection.ExecuteAsync(
             sql, 
-            new { BoardId = boardId, UserId = userId }, 
+            new { BoardId = boardId, UserId = userId, Role = role }, 
             _transaction);
     }
 
@@ -64,15 +65,16 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             new { UserId = userId });
     }
 
-    public async Task<BoardDetailsDto?> GetDetailsAsync(Guid boardId)
+    public async Task<BoardDetailsDto?> GetDetailsAsync(Guid boardId, Guid userId)
     {
-        const string sql = """
+        const string sqlBoardDetails = """
             SELECT
                 b.Id,
                 b.Name,
                 b.IsPublic,
                 b.CreatedBy,
                 b.CreatedAt,
+                bm.[Role] AS UserRole,
 
                 l.Id,
                 l.BoardId,
@@ -80,6 +82,7 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 l.Position,
 
                 c.Id,
+                c.ListId,
                 c.Name,
                 c.Description,
                 c.Position,
@@ -89,6 +92,7 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 a.BlobUrl
 
             FROM Boards b
+            LEFT JOIN BoardMembers bm ON bm.BoardId = b.Id AND bm.UserId = @UserId
             LEFT JOIN Lists l ON l.BoardId = b.Id
             LEFT JOIN Cards c ON c.ListId = l.Id
             LEFT JOIN CardAttachments a ON a.CardId = c.Id
@@ -97,6 +101,16 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
 
             ORDER BY l.Position, c.Position;
             """;
+        
+        const string sqlBoardMembers = """
+        SELECT 
+            bm.UserId,
+            u.EmailAddress,
+            bm.[Role]
+        FROM BoardMembers bm
+        JOIN Users u ON bm.UserId = u.Id
+        WHERE bm.BoardId = @BoardId;
+        """;
 
 
         var boardDictionary = new Dictionary<Guid, BoardDetailsDto>();
@@ -109,13 +123,14 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             CardDto,
             AttachmentResponseDto,
             BoardDetailsDto>(
-            sql,
+            sqlBoardDetails,
             (board, list, card, attachment) =>
             {
                 if (!boardDictionary.TryGetValue(board.Id, out var boardEntry))
                 {
                     boardEntry = board;
                     boardEntry.Lists = [];
+                    boardEntry.Members = [];
 
                     boardDictionary.Add(boardEntry.Id, boardEntry);
                 }
@@ -154,9 +169,104 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
 
                 return boardEntry;
             },
-            new { BoardId = boardId },
+            new { BoardId = boardId, UserId = userId },
             splitOn: "Id,Id,Id");
 
-        return boardDictionary.Values.FirstOrDefault();
+        var boardDetails = boardDictionary.Values.FirstOrDefault();
+        if (boardDetails is not null)
+        {
+            var members = await _connection.QueryAsync<BoardMemberDto>(
+                sqlBoardMembers,
+                new { BoardId = boardId });
+
+            boardDetails.Members = members.ToList();
+        }
+
+        return boardDetails;
+    }
+
+    public async Task<BoardRole?> GetUserRoleAsync(Guid boardId, Guid userId)
+    {
+        const string sql = """
+            SELECT [Role] 
+            FROM BoardMembers 
+            WHERE BoardId = @BoardId AND UserId = @UserId;
+            """;
+
+        var roleValue = await _connection.QueryFirstOrDefaultAsync<int?>(
+            sql, 
+            new { BoardId = boardId, UserId = userId }, 
+            _transaction);
+
+        if (roleValue is null)
+        {
+            return null;
+        }
+
+        return (BoardRole)roleValue.Value;
+    }
+
+    public async Task<Guid?> GetBoardIdByCardIdAsync(Guid cardId)
+    {
+        const string sql = """
+            SELECT BoardId 
+            FROM Lists l 
+            JOIN Cards c 
+            ON c.ListId = l.Id 
+            WHERE c.Id = @CardId;
+            """;
+            
+        return await _connection.QueryFirstOrDefaultAsync<Guid?>(
+            sql, 
+            new { CardId = cardId }, 
+            _transaction);
+    }
+
+    public async Task<Guid?> GetBoardIdByCommentIdAsync(Guid commentId)
+    {
+        const string sql = """
+            SELECT l.BoardId 
+            FROM Lists l 
+            JOIN Cards c ON c.ListId = l.Id 
+            JOIN Comments co ON co.CardId = c.Id 
+            WHERE co.Id = @CommentId;
+            """;
+
+        return await _connection.QueryFirstOrDefaultAsync<Guid?>(
+            sql, 
+            new { CommentId = commentId }, 
+            _transaction);
+    }
+
+    public async Task<Guid?> GetBoardIdByCardAttachmentIdAsync(Guid attachmentId)
+    {
+        const string sql = """
+            SELECT l.BoardId 
+            FROM Lists l 
+            JOIN Cards c ON c.ListId = l.Id 
+            JOIN CardAttachments ca ON ca.CardId = c.Id 
+            WHERE ca.Id = @AttachmentId;
+            """;
+
+        return await _connection.QueryFirstOrDefaultAsync<Guid?>(
+            sql, 
+            new { AttachmentId = attachmentId }, 
+            _transaction);
+    }
+
+    public async Task<Guid?> GetBoardIdByCommentAttachmentIdAsync(Guid attachmentId)
+    {
+        const string sql = """
+            SELECT l.BoardId 
+            FROM Lists l 
+            JOIN Cards c ON c.ListId = l.Id 
+            JOIN Comments co ON co.CardId = c.Id 
+            JOIN CommentAttachments comA ON comA.CommentId = co.Id
+            WHERE comA.Id = @AttachmentId;
+            """;
+        return await _connection.QueryFirstOrDefaultAsync<Guid?>(
+            sql, 
+            new { AttachmentId = attachmentId }, 
+            _transaction);
     }
 }

@@ -1,4 +1,5 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
@@ -7,14 +8,19 @@ namespace FlowBoard.Application.Features.Boards.Commands.InviteMember;
 public class InviteMemberCommandHandler : IRequestHandler<InviteMemberCommand, Result<bool>>
 {
     private readonly IUnitOfWorkFactory _uowFactory;
+    private readonly ICurrentUserService _currentUserService;
 
-    public InviteMemberCommandHandler(IUnitOfWorkFactory uowFactory)
+    public InviteMemberCommandHandler(
+        IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService)
     {
         _uowFactory = uowFactory;
+        _currentUserService = currentUserService;
     }
 
-    public async Task<Result<bool>> Handle(InviteMemberCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(
+        InviteMemberCommand request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.GetId();
         using var uow = _uowFactory.Create();
         try
         {
@@ -24,7 +30,15 @@ public class InviteMemberCommandHandler : IRequestHandler<InviteMemberCommand, R
                 return Result.Fail("Board not found.");
             }
 
-            var userToInvite = await uow.UserRepository.GetByEmailAsync(request.Email);
+            var currentUserRole = await uow.BoardRepository.GetUserRoleAsync(
+                board.Id, currentUserId);
+            if (currentUserRole != BoardRole.Owner)
+            {
+                return Result.Fail("Only the board owner can invite new members.");
+            }
+
+            var userToInvite = await uow.UserRepository.GetByEmailAsync(
+                request.Email);
             if (userToInvite == null)
             {
                 return Result.Fail("User with this email does not exist.");
@@ -36,7 +50,8 @@ public class InviteMemberCommandHandler : IRequestHandler<InviteMemberCommand, R
                 return Result.Fail("This user is already a member of this board.");
             }
 
-            await uow.BoardRepository.AddMemberAsync(board.Id, userToInvite.Id);
+            await uow.BoardRepository.AddMemberAsync(
+                board.Id, userToInvite.Id, request.Role);
 
             uow.Commit();
             return Result.Ok(true);

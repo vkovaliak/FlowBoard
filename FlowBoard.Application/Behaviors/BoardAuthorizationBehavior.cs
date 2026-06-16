@@ -25,50 +25,18 @@ public class BoardAuthorizationBehavior<TRequest, TResponse>
         RequestHandlerDelegate<TResponse> next, 
         CancellationToken cancellationToken)
     {
-        var requestName = typeof(TRequest).Name;
-        if (requestName.EndsWith("Query"))
+        if (typeof(TRequest).Name.EndsWith("Query"))
         {
-            return await next(cancellationToken);
+            return await next();
         }
-
-        Guid? boardId = null;
 
         var boardIdProp = typeof(TRequest).GetProperty("BoardId");
-        if (boardIdProp?.GetValue(request) is Guid bId)
-        {
-            boardId = bId;
-        }
-        else if (typeof(TRequest).GetProperty("CardId")?.GetValue(
-            request) is Guid cardId)
-        {
-            boardId = await _boardRepository.GetBoardIdByCardIdAsync(cardId);
-        }
-        else if (typeof(TRequest).GetProperty("CommentId")?.GetValue(
-            request) is Guid commentId)
-        {
-            boardId = await _boardRepository.GetBoardIdByCommentIdAsync(commentId);
-        }
-        else if (typeof(TRequest).GetProperty("AttachmentId")?.GetValue(
-            request) is Guid attachmentId)
-        {
-            var commandName = typeof(TRequest).Name;
-            if (commandName.Contains("CardAttachment"))
-            {
-                boardId = await _boardRepository.GetBoardIdByCardAttachmentIdAsync(
-                    attachmentId);
-            }
-            else if (commandName.Contains("CommentAttachment"))
-            {
-                boardId = await _boardRepository.GetBoardIdByCommentAttachmentIdAsync(
-                    attachmentId);
-            }
-        }
-
-        if (boardId.HasValue)
+        
+        if (boardIdProp?.GetValue(request) is Guid boardId)
         {
             var currentUserId = _currentUserService.GetId();
             var userRole = await _boardRepository.GetUserRoleAsync(
-                boardId.Value, currentUserId);
+                boardId, currentUserId);
 
             if (userRole is null || userRole == BoardRole.Viewer)
             {
@@ -79,6 +47,6 @@ public class BoardAuthorizationBehavior<TRequest, TResponse>
             }
         }
 
-        return await next(cancellationToken);
+        return await next();
     }
 }

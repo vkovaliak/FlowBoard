@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace FlowBoard.WebApi.Controllers;
 
 [ApiController]
-[Route("api/attachment")]
+[Route("api/boards/{boardId:guid}")]
 [Authorize]
 public class AttachmentController : ControllerBase
 {
@@ -28,7 +28,7 @@ public class AttachmentController : ControllerBase
     [HttpPost("card/{cardId:guid}/upload")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadCardAttachmentAsync(
-        Guid cardId, IFormFile file)
+        Guid boardId, Guid cardId, IFormFile file)
     {
         if (file == null || file.Length == 0)
         {
@@ -38,7 +38,7 @@ public class AttachmentController : ControllerBase
         using var stream = file.OpenReadStream();
 
         var command = new UploadCardAttachmentCommand(
-            cardId, stream, file.FileName);
+            boardId, cardId, stream, file.FileName);
 
         var result = await _mediator.Send(command);
 
@@ -56,7 +56,7 @@ public class AttachmentController : ControllerBase
     [HttpPost("card/{cardId:guid}/comment/{commentId:guid}/upload")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadCommentAttachmentAsync(
-        Guid cardId, Guid commentId, IFormFile file)
+        Guid boardId, Guid cardId, Guid commentId, IFormFile file)
     {
         if (file == null || file.Length == 0)
         {
@@ -66,7 +66,7 @@ public class AttachmentController : ControllerBase
         using var stream = file.OpenReadStream();
 
         var command = new UploadCommentAttachmentCommand(
-            commentId, stream, file.FileName);
+            boardId, commentId, stream, file.FileName);
 
         var result = await _mediator.Send(command);
 
@@ -82,9 +82,11 @@ public class AttachmentController : ControllerBase
     }
 
     [HttpDelete("card/{cardId:guid}/attachment/{attachmentId:guid}")]
-    public async Task<IActionResult> DeleteCardAttachmentAsync(Guid cardId, Guid attachmentId)
+    public async Task<IActionResult> DeleteCardAttachmentAsync(
+        Guid boardId, Guid cardId, Guid attachmentId)
     {
-        var command = new DeleteCardAttachmentCommand(attachmentId);
+        var command = new DeleteCardAttachmentCommand(
+            boardId, attachmentId);
         var result = await _mediator.Send(command);
 
         if (result.IsFailed)
@@ -99,9 +101,11 @@ public class AttachmentController : ControllerBase
     }
 
     [HttpDelete("card/{cardId:guid}/comment/{attachmentId:guid}")]
-    public async Task<IActionResult> DeleteCommentAttachmentAsync(Guid cardId, Guid attachmentId)
+    public async Task<IActionResult> DeleteCommentAttachmentAsync(
+        Guid boardId, Guid cardId, Guid attachmentId)
     {
-        var command = new DeleteCommentAttachmentCommand(attachmentId);
+        var command = new DeleteCommentAttachmentCommand(
+            boardId, attachmentId);
         var result = await _mediator.Send(command);
 
         if (result.IsFailed)

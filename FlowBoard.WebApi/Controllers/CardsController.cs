@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace FlowBoard.WebApi.Controllers;
 
 [ApiController]
-[Route("api/cards")]
+[Route("api/boards/{boardId:guid}")]
 [Authorize]
 public class CardsConroller : ControllerBase
 {
@@ -25,23 +25,24 @@ public class CardsConroller : ControllerBase
         _hubContext = hubContext;
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreateAsync(CreateCardCommand command)
+    [HttpPost("cards")]
+    public async Task<IActionResult> CreateAsync(Guid boardId, CreateCardCommand command)
     {
-        var result = await _mediator.Send(command);
+        var updatedCommand = command with { BoardId = boardId };
+        var result = await _mediator.Send(updatedCommand);
 
         if (result.IsFailed)
         {
             return BadRequest(result.Errors.First().Message);
         }
 
-        await _hubContext.Clients.Group(command.BoardId.ToString())
-            .SendAsync(HubMethods.BoardUpdated, command.BoardId);
+        await _hubContext.Clients.Group(updatedCommand.BoardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, updatedCommand.BoardId);
 
         return Ok(result.Value);
     }
 
-    [HttpPut("{boardId:guid}/list/{listId:guid}/card/{cardId:guid}")]
+    [HttpPut("lists/{listId:guid}/cards/{cardId:guid}")]
     public async Task<IActionResult> UpdateAsync(
         Guid boardId, 
         Guid listId, 
@@ -67,7 +68,7 @@ public class CardsConroller : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpDelete("{boardId:guid}/list/{listId:guid}/card/{cardId:guid}")]
+    [HttpDelete("lists/{listId:guid}/cards/{cardId:guid}")]
     public async Task<IActionResult> DeleteAsync(
         Guid boardId,
         Guid listId,
@@ -91,7 +92,7 @@ public class CardsConroller : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpPut("{boardId:guid}/card/{cardId:guid}/move")]
+    [HttpPut("cards/{cardId:guid}/move")]
     public async Task<IActionResult> MoveAsync(
         Guid boardId, 
         Guid cardId, 

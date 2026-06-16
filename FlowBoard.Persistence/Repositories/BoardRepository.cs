@@ -5,6 +5,7 @@ using FlowBoard.Domain.DTOs.Attachments;
 using FlowBoard.Domain.DTOs.Boards;
 using FlowBoard.Domain.DTOs.Cards;
 using FlowBoard.Domain.DTOs.Lists;
+using FlowBoard.Domain.DTOs.Users;
 using FlowBoard.Domain.Entities;
 using FlowBoard.Domain.Enums;
 
@@ -204,69 +205,5 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
         }
 
         return (BoardRole)roleValue.Value;
-    }
-
-    public async Task<Guid?> GetBoardIdByCardIdAsync(Guid cardId)
-    {
-        const string sql = """
-            SELECT BoardId 
-            FROM Lists l 
-            JOIN Cards c 
-            ON c.ListId = l.Id 
-            WHERE c.Id = @CardId;
-            """;
-            
-        return await _connection.QueryFirstOrDefaultAsync<Guid?>(
-            sql, 
-            new { CardId = cardId }, 
-            _transaction);
-    }
-
-    public async Task<Guid?> GetBoardIdByCommentIdAsync(Guid commentId)
-    {
-        const string sql = """
-            SELECT l.BoardId 
-            FROM Lists l 
-            JOIN Cards c ON c.ListId = l.Id 
-            JOIN Comments co ON co.CardId = c.Id 
-            WHERE co.Id = @CommentId;
-            """;
-
-        return await _connection.QueryFirstOrDefaultAsync<Guid?>(
-            sql, 
-            new { CommentId = commentId }, 
-            _transaction);
-    }
-
-    public async Task<Guid?> GetBoardIdByCardAttachmentIdAsync(Guid attachmentId)
-    {
-        const string sql = """
-            SELECT l.BoardId 
-            FROM Lists l 
-            JOIN Cards c ON c.ListId = l.Id 
-            JOIN CardAttachments ca ON ca.CardId = c.Id 
-            WHERE ca.Id = @AttachmentId;
-            """;
-
-        return await _connection.QueryFirstOrDefaultAsync<Guid?>(
-            sql, 
-            new { AttachmentId = attachmentId }, 
-            _transaction);
-    }
-
-    public async Task<Guid?> GetBoardIdByCommentAttachmentIdAsync(Guid attachmentId)
-    {
-        const string sql = """
-            SELECT l.BoardId 
-            FROM Lists l 
-            JOIN Cards c ON c.ListId = l.Id 
-            JOIN Comments co ON co.CardId = c.Id 
-            JOIN CommentAttachments comA ON comA.CommentId = co.Id
-            WHERE comA.Id = @AttachmentId;
-            """;
-        return await _connection.QueryFirstOrDefaultAsync<Guid?>(
-            sql, 
-            new { AttachmentId = attachmentId }, 
-            _transaction);
     }
 }

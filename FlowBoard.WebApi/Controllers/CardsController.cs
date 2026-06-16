@@ -36,7 +36,7 @@ public class CardsConroller : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
-        await _hubContext.Clients.Group(updatedCommand.BoardId.ToString())
+        await _hubContext.Clients.Group(boardId.ToString())
             .SendAsync(HubMethods.BoardUpdated, updatedCommand.BoardId);
 
         return Ok(result.Value);

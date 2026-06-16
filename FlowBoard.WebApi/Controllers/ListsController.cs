@@ -29,15 +29,15 @@ public class ListsConroller : ControllerBase
     public async Task<IActionResult> CreateAsync(Guid boardId, CreateListCommand command)
     {
         var updatedCommand = command with { BoardId = boardId };
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(updatedCommand);
 
         if (result.IsFailed)
         {
             return BadRequest(result.Errors.First().Message);
         }
 
-        await _hubContext.Clients.Group(command.BoardId.ToString())
-            .SendAsync(HubMethods.BoardUpdated, command.BoardId);
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
 
         return Ok(result.Value);
     }

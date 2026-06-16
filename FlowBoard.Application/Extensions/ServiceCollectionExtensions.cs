@@ -16,6 +16,7 @@ public static class ServiceCollectionExtensions
         {
             cfg.RegisterServicesFromAssembly(assembly);
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+            cfg.AddOpenBehavior(typeof(BoardAuthorizationBehavior<,>));
         });
 
         return services;

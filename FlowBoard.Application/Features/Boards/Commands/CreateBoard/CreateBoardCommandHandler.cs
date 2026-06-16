@@ -1,6 +1,7 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.Constants;
 using FlowBoard.Domain.Entities;
+using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
@@ -33,7 +34,8 @@ public class CreateBoardCommandHandler : IRequestHandler<CreateBoardCommand, Res
         {
             await uow.BoardRepository.CreateAsync(board);
 
-            await uow.BoardRepository.AddMemberAsync(board.Id, currentUserId);
+            await uow.BoardRepository.AddMemberAsync(
+                board.Id, currentUserId, BoardRole.Owner);
 
             for (int i = 0; i < BoardConstants.DefaultColumnNames.Length; i++)
             {

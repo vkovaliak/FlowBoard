@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace FlowBoard.WebApi.Controllers;
 
 [ApiController]
-[Route("api/comment")]
+[Route("api/boards/{boardId:guid}/cards/{cardId:guid}/comments")]
 [Authorize]
 public class CommentConroller : ControllerBase
 {
@@ -26,10 +26,10 @@ public class CommentConroller : ControllerBase
         _hubContext = hubContext;
     }
 
-    [HttpPost("card/{cardId:guid}")]
-    public async Task<IActionResult> CreateAsync(Guid cardId, CreateCommentCommand command)
+    [HttpPost]
+    public async Task<IActionResult> CreateAsync(Guid boardId, Guid cardId, CreateCommentCommand command)
     {
-        var updatedCommand = command with { CardId = cardId };
+        var updatedCommand = command with { BoardId = boardId, CardId = cardId };
         
         var result = await _mediator.Send(updatedCommand);
 
@@ -44,8 +44,8 @@ public class CommentConroller : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpGet("card/{cardId:guid}")]
-    public async Task<IActionResult> GetByCardIdAsync(Guid cardId)
+    [HttpGet]
+    public async Task<IActionResult> GetByCardIdAsync(Guid boardId, Guid cardId)
     {
         var result = await _mediator.Send(
             new GetCommentsByCardIdQuery(cardId));
@@ -58,11 +58,11 @@ public class CommentConroller : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpPut("card/{cardId:guid}/comment/{commentId:guid}")]
+    [HttpPut("{commentId:guid}")]
     public async Task<IActionResult> UpdateAsync(
-        Guid cardId, Guid commentId, UpdateCommentCommand command)
+        Guid boardId, Guid cardId, Guid commentId, UpdateCommentCommand command)
     {
-        var updatedCommand = command with { CardId = cardId, CommentId = commentId };
+        var updatedCommand = command with { BoardId = boardId, CardId = cardId, CommentId = commentId };
         
         var result = await _mediator.Send(updatedCommand);
 
@@ -77,10 +77,10 @@ public class CommentConroller : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpDelete("card/{cardId:guid}/comment/{commentId:guid}")]
-    public async Task<IActionResult> DeleteAsync(Guid cardId, Guid commentId)
+    [HttpDelete("{commentId:guid}")]
+    public async Task<IActionResult> DeleteAsync(Guid boardId, Guid cardId, Guid commentId)
     {
-        var command = new DeleteCommentCommand(cardId, commentId);
+        var command = new DeleteCommentCommand(boardId, cardId, commentId);
 
         var result = await _mediator.Send(command);
 

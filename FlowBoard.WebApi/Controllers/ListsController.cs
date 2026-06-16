@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace FlowBoard.WebApi.Controllers;
 
 [ApiController]
-[Route("api/lists")]
+[Route("api/boards/{boardId:guid}/lists")]
 [Authorize]
 public class ListsConroller : ControllerBase
 {
@@ -26,22 +26,23 @@ public class ListsConroller : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateAsync(CreateListCommand command)
+    public async Task<IActionResult> CreateAsync(Guid boardId, CreateListCommand command)
     {
-        var result = await _mediator.Send(command);
+        var updatedCommand = command with { BoardId = boardId };
+        var result = await _mediator.Send(updatedCommand);
 
         if (result.IsFailed)
         {
             return BadRequest(result.Errors.First().Message);
         }
 
-        await _hubContext.Clients.Group(command.BoardId.ToString())
-            .SendAsync(HubMethods.BoardUpdated, command.BoardId);
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
 
         return Ok(result.Value);
     }
 
-    [HttpPut("{boardId:guid}/list/{listId:guid}")]
+    [HttpPut("{listId:guid}")]
     public async Task<IActionResult> UpdateAsync(
         Guid boardId, 
         Guid listId, 
@@ -62,7 +63,7 @@ public class ListsConroller : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpDelete("{boardId:guid}/list/{listId:guid}")]
+    [HttpDelete("{listId:guid}")]
     public async Task<IActionResult> DeleteAsync(Guid boardId, Guid listId)
     {
         var command = new DeleteListCommand(ListId: listId, BoardId: boardId);
@@ -80,7 +81,7 @@ public class ListsConroller : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpPut("{boardId:guid}/list/{listId:guid}/move")]
+    [HttpPut("{listId:guid}/move")]
     public async Task<IActionResult> MoveAsync(Guid boardId, 
         Guid listId, MoveListCommand command)
     {

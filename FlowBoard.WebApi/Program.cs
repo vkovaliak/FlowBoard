@@ -10,6 +10,7 @@ using FlowBoard.Infrastructure.Extensions;
 using FlowBoard.WebApi.Configurations;
 using FlowBoard.WebApi.Hubs;
 using FlowBoard.Domain.Constants;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +26,10 @@ builder.Services.AddInfrastructure();
 builder.Services.AddPersistence();
 
 builder.Services.AddSignalR();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(
+        new JsonStringEnumConverter()));;
+        
 builder.Services.AddOpenApi();
 
 builder.Services.AddHttpContextAccessor();

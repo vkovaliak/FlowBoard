@@ -1,0 +1,2 @@
+ALTER TABLE [BoardMembers]
+ADD [Role] INT NOT NULL DEFAULT 1;

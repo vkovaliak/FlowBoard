@@ -8,15 +8,18 @@ namespace FlowBoard.Application.Features.Boards.Queries.GetBoardDetails;
 public class GetBoardDetailsQueryHandler : IRequestHandler<GetBoardDetailsQuery, Result<BoardDetailsDto?>>
 {
     private readonly IBoardRepository _boardRepository;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetBoardDetailsQueryHandler(IBoardRepository boardRepository)
+    public GetBoardDetailsQueryHandler(IBoardRepository boardRepository, ICurrentUserService currentUserService)
     {
         _boardRepository = boardRepository;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<BoardDetailsDto?>> Handle(GetBoardDetailsQuery request, CancellationToken cancellationToken)
     {
-        var result = await _boardRepository.GetDetailsAsync(request.BoardId);
+        var currentUserId = _currentUserService.GetId();
+        var result = await _boardRepository.GetDetailsAsync(request.BoardId, currentUserId);
         return Result.Ok(result);
     }
 }

@@ -87,6 +87,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.MapHub<BoardHub>(HubRoutes.Boards);
 app.MapHub<CommentHub>(HubRoutes.Comments);
 app.MapControllers();
 app.Run();

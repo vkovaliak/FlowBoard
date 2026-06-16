@@ -2,9 +2,12 @@ using FlowBoard.Application.Features.Attachments.Commands.DeleteCardAttachment;
 using FlowBoard.Application.Features.Attachments.Commands.DeleteCommentAttachment;
 using FlowBoard.Application.Features.Attachments.Commands.UploadCardAttachment;
 using FlowBoard.Application.Features.Attachments.Commands.UploadCommentAttachment;
+using FlowBoard.Domain.Constants;
+using FlowBoard.WebApi.Hubs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FlowBoard.WebApi.Controllers;
 
@@ -14,10 +17,12 @@ namespace FlowBoard.WebApi.Controllers;
 public class AttachmentController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IHubContext<CommentHub> _commentHubContext;
 
-    public AttachmentController(IMediator mediator)
+    public AttachmentController(IMediator mediator, IHubContext<CommentHub> commentHubContext)
     {
         _mediator = mediator;
+        _commentHubContext = commentHubContext;
     }
 
     [HttpPost("card/{cardId:guid}/upload")]
@@ -42,13 +47,16 @@ public class AttachmentController : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
+        await _commentHubContext.Clients.Group(cardId.ToString())
+            .SendAsync(HubMethods.CardAttachmentsChanged, cardId);
+
         return Ok(result.Value);
     }
 
-    [HttpPost("comment/{commentId:guid}/upload")]
+    [HttpPost("card/{cardId:guid}/comment/{commentId:guid}/upload")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadCommentAttachmentAsync(
-        Guid commentId, IFormFile file)
+        Guid cardId, Guid commentId, IFormFile file)
     {
         if (file == null || file.Length == 0)
         {
@@ -67,11 +75,14 @@ public class AttachmentController : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
+        await _commentHubContext.Clients.Group(cardId.ToString())
+            .SendAsync(HubMethods.CommentUpdated, result.Value);
+
         return Ok(result.Value);
     }
 
-    [HttpDelete("card/{attachmentId:guid}")]
-    public async Task<IActionResult> DeleteCardAttachmentAsync(Guid attachmentId)
+    [HttpDelete("card/{cardId:guid}/attachment/{attachmentId:guid}")]
+    public async Task<IActionResult> DeleteCardAttachmentAsync(Guid cardId, Guid attachmentId)
     {
         var command = new DeleteCardAttachmentCommand(attachmentId);
         var result = await _mediator.Send(command);
@@ -81,11 +92,14 @@ public class AttachmentController : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
+        await _commentHubContext.Clients.Group(cardId.ToString())
+            .SendAsync(HubMethods.CardAttachmentsChanged, cardId);
+
         return Ok(result);
     }
 
-    [HttpDelete("comment/{attachmentId:guid}")]
-    public async Task<IActionResult> DeleteCommentAttachmentAsync(Guid attachmentId)
+    [HttpDelete("card/{cardId:guid}/comment/{attachmentId:guid}")]
+    public async Task<IActionResult> DeleteCommentAttachmentAsync(Guid cardId, Guid attachmentId)
     {
         var command = new DeleteCommentAttachmentCommand(attachmentId);
         var result = await _mediator.Send(command);
@@ -94,6 +108,9 @@ public class AttachmentController : ControllerBase
         {
             return BadRequest(result.Errors.First().Message);
         }
+
+        await _commentHubContext.Clients.Group(cardId.ToString())
+            .SendAsync(HubMethods.CommentUpdated, attachmentId);
 
         return Ok(result);
     }

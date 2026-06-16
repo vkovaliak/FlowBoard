@@ -2,9 +2,12 @@ using FlowBoard.Application.Features.Cards.Commands.CreateCard;
 using FlowBoard.Application.Features.Cards.Commands.DeleteCard;
 using FlowBoard.Application.Features.Cards.Commands.MoveCard;
 using FlowBoard.Application.Features.Cards.Commands.UpdateCard;
+using FlowBoard.Domain.Constants;
+using FlowBoard.WebApi.Hubs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FlowBoard.WebApi.Controllers;
 
@@ -14,10 +17,12 @@ namespace FlowBoard.WebApi.Controllers;
 public class CardsConroller : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IHubContext<BoardHub> _hubContext;
 
-    public CardsConroller(IMediator mediator)
+    public CardsConroller(IMediator mediator, IHubContext<BoardHub> hubContext)
     {
         _mediator = mediator;
+        _hubContext = hubContext;
     }
 
     [HttpPost]
@@ -29,6 +34,9 @@ public class CardsConroller : ControllerBase
         {
             return BadRequest(result.Errors.First().Message);
         }
+
+        await _hubContext.Clients.Group(command.BoardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, command.BoardId);
 
         return Ok(result.Value);
     }
@@ -53,6 +61,9 @@ public class CardsConroller : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
+
         return Ok(result.Value);
     }
 
@@ -73,6 +84,9 @@ public class CardsConroller : ControllerBase
         {
             return BadRequest(result.Errors.First().Message);
         }
+
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
 
         return Ok(result.Value);
     }
@@ -96,6 +110,9 @@ public class CardsConroller : ControllerBase
         {
             return BadRequest(result.Errors.First().Message);
         }
+
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
 
         return Ok(result.Value);
     }

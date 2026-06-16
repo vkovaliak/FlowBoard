@@ -1,6 +1,8 @@
+using FlowBoard.Application.Features.Cards.Commands.AssignMember;
 using FlowBoard.Application.Features.Cards.Commands.CreateCard;
 using FlowBoard.Application.Features.Cards.Commands.DeleteCard;
 using FlowBoard.Application.Features.Cards.Commands.MoveCard;
+using FlowBoard.Application.Features.Cards.Commands.UnassignMember;
 using FlowBoard.Application.Features.Cards.Commands.UpdateCard;
 using FlowBoard.Domain.Constants;
 using FlowBoard.WebApi.Hubs;
@@ -106,6 +108,42 @@ public class CardsConroller : ControllerBase
         );
 
         var result = await _mediator.Send(updatedCommand);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("cards/{cardId:guid}/assignees/{userId:guid}")]
+    public async Task<IActionResult> AssignMemberAsync(
+        Guid boardId, Guid cardId, Guid userId)
+    {
+        var command = new AssignMemberCommand(boardId, cardId, userId);
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpDelete("cards/{cardId:guid}/assignees/{userId:guid}")]
+    public async Task<IActionResult> UnassignMemberAsync(
+        Guid boardId, Guid cardId, Guid userId)
+    {
+        var command = new UnassignMemberCommand(boardId, cardId, userId);
+        var result = await _mediator.Send(command);
 
         if (result.IsFailed)
         {

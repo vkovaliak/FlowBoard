@@ -8,6 +8,7 @@ public interface IUnitOfWork : IDisposable
     IBoardRepository BoardRepository { get; }
     ICardRepository CardRepository { get; }
     ICommentRepository CommentRepository { get; }
+    ICardAssigneeRepository CardAssigneeRepository { get; }
     
     void Commit();
     void Rollback();

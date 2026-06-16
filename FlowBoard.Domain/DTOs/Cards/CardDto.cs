@@ -1,4 +1,5 @@
 using FlowBoard.Domain.DTOs.Attachments;
+using FlowBoard.Domain.DTOs.CardAssignee;
 
 namespace FlowBoard.Domain.DTOs.Cards;
 
@@ -15,4 +16,6 @@ public class CardDto
     public int Position { get; set; }
 
     public List<AttachmentResponseDto> Attachments { get; set; } = [];
+
+    public List<CardAssigneeDto> Assignees { get; set; } = [];
 }

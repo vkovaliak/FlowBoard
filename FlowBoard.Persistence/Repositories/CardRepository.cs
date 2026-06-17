@@ -82,4 +82,17 @@ public class CardRepository : BaseRepository<Card, Guid>, ICardRepository
             NewPosition = newPosition
         }, _transaction);
     }
+
+    public Task ToggleCompletionAsync(Guid cardId)
+    {
+        const string sql = """
+            UPDATE Cards SET IsCompleted = ~IsCompleted 
+            WHERE Id = @CardId;
+            """;
+            
+        return _connection.ExecuteAsync(
+            sql, 
+            new { CardId = cardId }, 
+            _transaction);
+    }
 }

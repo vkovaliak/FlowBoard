@@ -15,6 +15,10 @@ public class CardDto
 
     public int Position { get; set; }
 
+    public DateTime? DueDate { get; set; }
+
+    public bool IsCompleted { get; set; }
+
     public List<AttachmentResponseDto> Attachments { get; set; } = [];
 
     public List<CardAssigneeDto> Assignees { get; set; } = [];

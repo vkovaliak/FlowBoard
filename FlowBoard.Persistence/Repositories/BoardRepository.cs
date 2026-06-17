@@ -88,6 +88,8 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 c.Name,
                 c.Description,
                 c.Position,
+                c.DueDate,
+                c.IsCompleted,
 
                 a.Id,
                 a.FileName,

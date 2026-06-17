@@ -14,6 +14,10 @@ public class Card : BaseEntity<Guid>
 
     public required int Position { get; set; }
 
+    public DateTime? DueDate { get; set; }
+
+    public bool IsCompleted { get; set; }
+
     [Editable(false)]
     public DateTime CreatedAt { get; set; }
     

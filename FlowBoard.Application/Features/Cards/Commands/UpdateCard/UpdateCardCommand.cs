@@ -8,5 +8,6 @@ public record UpdateCardCommand(
     Guid ListId,
     Guid CardId,
     string Name,
-    string? Description) 
+    string? Description,
+    DateTime? DueDate) 
     : IRequest<Result<bool>>;

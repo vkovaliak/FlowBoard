@@ -2,6 +2,7 @@ using FlowBoard.Application.Features.Cards.Commands.AssignMember;
 using FlowBoard.Application.Features.Cards.Commands.CreateCard;
 using FlowBoard.Application.Features.Cards.Commands.DeleteCard;
 using FlowBoard.Application.Features.Cards.Commands.MoveCard;
+using FlowBoard.Application.Features.Cards.Commands.ToggleCardCompletion;
 using FlowBoard.Application.Features.Cards.Commands.UnassignMember;
 using FlowBoard.Application.Features.Cards.Commands.UpdateCard;
 using FlowBoard.Domain.Constants;
@@ -16,12 +17,12 @@ namespace FlowBoard.WebApi.Controllers;
 [ApiController]
 [Route("api/boards/{boardId:guid}")]
 [Authorize]
-public class CardsConroller : ControllerBase
+public class CardsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IHubContext<BoardHub> _hubContext;
 
-    public CardsConroller(IMediator mediator, IHubContext<BoardHub> hubContext)
+    public CardsController(IMediator mediator, IHubContext<BoardHub> hubContext)
     {
         _mediator = mediator;
         _hubContext = hubContext;
@@ -150,6 +151,23 @@ public class CardsConroller : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpPut("cards/{cardId:guid}/toggle-completion")]
+    public async Task<IActionResult> ToggleCompletionAsync(Guid boardId, Guid cardId)
+    {
+        var command = new ToggleCardCompletionCommand(boardId, cardId);
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+        
         await _hubContext.Clients.Group(boardId.ToString())
             .SendAsync(HubMethods.BoardUpdated, boardId);
 

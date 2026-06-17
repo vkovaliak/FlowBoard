@@ -48,6 +48,7 @@ public class UpdateCardCommandHandler : IRequestHandler<UpdateCardCommand, Resul
 
             card.Name = command.Name;
             card.Description = command.Description;
+            card.DueDate = command.DueDate;
             card.UpdatedAt = DateTime.UtcNow;
             card.UpdatedBy = currentUserId;
 

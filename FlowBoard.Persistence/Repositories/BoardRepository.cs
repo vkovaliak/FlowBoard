@@ -3,6 +3,7 @@ using Dapper;
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.DTOs.Attachments;
 using FlowBoard.Domain.DTOs.Boards;
+using FlowBoard.Domain.DTOs.CardAssignee;
 using FlowBoard.Domain.DTOs.Cards;
 using FlowBoard.Domain.DTOs.Lists;
 using FlowBoard.Domain.DTOs.Users;
@@ -90,13 +91,18 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
 
                 a.Id,
                 a.FileName,
-                a.BlobUrl
+                a.BlobUrl,
+
+                u.Id AS UserId,
+                u.EmailAddress
 
             FROM Boards b
             LEFT JOIN BoardMembers bm ON bm.BoardId = b.Id AND bm.UserId = @UserId
             LEFT JOIN Lists l ON l.BoardId = b.Id
             LEFT JOIN Cards c ON c.ListId = l.Id
             LEFT JOIN CardAttachments a ON a.CardId = c.Id
+            LEFT JOIN CardAssignees ca ON ca.CardId = c.Id
+            LEFT JOIN Users u ON u.Id = ca.UserId
 
             WHERE b.Id = @BoardId
 
@@ -123,9 +129,10 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             ListDto,
             CardDto,
             AttachmentResponseDto,
+            CardAssigneeDto,
             BoardDetailsDto>(
             sqlBoardDetails,
-            (board, list, card, attachment) =>
+            (board, list, card, attachment, assignee) =>
             {
                 if (!boardDictionary.TryGetValue(board.Id, out var boardEntry))
                 {
@@ -165,13 +172,21 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                                 cardEntry.Attachments.Add(attachment);
                             }
                         }
+
+                        if (assignee is not null && assignee.UserId != Guid.Empty)
+                        {
+                            if (!cardEntry.Assignees.Any(x => x.UserId == assignee.UserId))
+                            {
+                                cardEntry.Assignees.Add(assignee);
+                            }
+                        }
                     }
                 }
 
                 return boardEntry;
             },
             new { BoardId = boardId, UserId = userId },
-            splitOn: "Id,Id,Id");
+            splitOn: "Id,Id,Id, UserId");
 
         var boardDetails = boardDictionary.Values.FirstOrDefault();
         if (boardDetails is not null)

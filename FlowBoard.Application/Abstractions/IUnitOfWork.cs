@@ -9,6 +9,8 @@ public interface IUnitOfWork : IDisposable
     ICardRepository CardRepository { get; }
     ICommentRepository CommentRepository { get; }
     ICardAssigneeRepository CardAssigneeRepository { get; }
+    ILabelRepository LabelRepository { get; }
+    ICardLabelRepository CardLabelRepository { get; }
     
     void Commit();
     void Rollback();

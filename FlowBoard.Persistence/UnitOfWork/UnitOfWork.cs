@@ -18,12 +18,20 @@ public class UnitOfWork : IUnitOfWork
         => _cards ??= new CardRepository(_connection, _transaction);
 
     private ICardAssigneeRepository? _cardAssignees;
-        public ICardAssigneeRepository CardAssigneeRepository
-            => _cardAssignees ??= new CardAssigneeRepository(_connection, _transaction);
+    public ICardAssigneeRepository CardAssigneeRepository
+        => _cardAssignees ??= new CardAssigneeRepository(_connection, _transaction);
+    
+    private ICardLabelRepository? _cardLabels;
+    public ICardLabelRepository CardLabelRepository
+        => _cardLabels ??= new CardLabelRepository(_connection, _transaction);
     
     private ICommentRepository? _comment;
     public ICommentRepository CommentRepository
         => _comment ??= new CommentRepository(_connection, _transaction);
+
+    private ILabelRepository? _labels;
+    public ILabelRepository LabelRepository
+        => _labels ??= new LabelRepository(_connection, _transaction);
 
     private IListRepository? _lists;
     public IListRepository ListRepository

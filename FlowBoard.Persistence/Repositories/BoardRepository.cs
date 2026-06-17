@@ -5,6 +5,7 @@ using FlowBoard.Domain.DTOs.Attachments;
 using FlowBoard.Domain.DTOs.Boards;
 using FlowBoard.Domain.DTOs.CardAssignee;
 using FlowBoard.Domain.DTOs.Cards;
+using FlowBoard.Domain.DTOs.Labels;
 using FlowBoard.Domain.DTOs.Lists;
 using FlowBoard.Domain.DTOs.Users;
 using FlowBoard.Domain.Entities;
@@ -112,15 +113,27 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             """;
         
         const string sqlBoardMembers = """
-        SELECT 
-            bm.UserId,
-            u.EmailAddress,
-            bm.[Role]
-        FROM BoardMembers bm
-        JOIN Users u ON bm.UserId = u.Id
-        WHERE bm.BoardId = @BoardId;
-        """;
-
+            SELECT 
+                bm.UserId,
+                u.EmailAddress,
+                bm.[Role]
+            FROM BoardMembers bm
+            JOIN Users u ON bm.UserId = u.Id
+            WHERE bm.BoardId = @BoardId;
+            """;
+        
+        const string sqlCardLabels = """
+            SELECT 
+                cl.CardId,
+                l.Id,
+                l.Name,
+                l.Color
+            FROM CardLabels cl
+            JOIN Labels l ON l.Id = cl.LabelId
+            JOIN Cards c ON c.Id = cl.CardId
+            JOIN Lists li ON li.Id = c.ListId
+            WHERE li.BoardId = @BoardId;
+            """;
 
         var boardDictionary = new Dictionary<Guid, BoardDetailsDto>();
         var listDictionary = new Dictionary<Guid, ListDto>();
@@ -163,6 +176,7 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                         {
                             cardEntry = card;
                             cardEntry.Attachments = [];
+                            cardEntry.Labels = [];
                             cardDictionary.Add(cardEntry.Id, cardEntry);
                             listEntry.Cards.Add(cardEntry);
                         }
@@ -198,6 +212,27 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 new { BoardId = boardId });
 
             boardDetails.Members = members.ToList();
+
+            var cardLabelsData = await _connection.QueryAsync<dynamic>(
+                sqlCardLabels,
+                new { BoardId = boardId });
+            
+            var labelsByCard = cardLabelsData
+                .GroupBy(row => (Guid)row.CardId);
+            
+            foreach (var group in labelsByCard)
+            {
+                if (cardDictionary.TryGetValue(group.Key, out var cardEntry))
+                {
+                    cardEntry.Labels = group.Select(row => new LabelDto
+                    {
+                        Id = row.Id,
+                        Name = row.Name,
+                        Color = row.Color
+                    }).ToList();
+                }
+            }
+
         }
 
         return boardDetails;

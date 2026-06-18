@@ -3,6 +3,7 @@ using FlowBoard.Application.Features.Labels.Commands.CreateLabel;
 using FlowBoard.Application.Features.Labels.Commands.DeleteLabel;
 using FlowBoard.Application.Features.Labels.Commands.DetachLabel;
 using FlowBoard.Application.Features.Labels.Commands.UpdateLabel;
+using FlowBoard.Application.Features.Labels.Queries.GetBoardLabels;
 using FlowBoard.Domain.Constants;
 using FlowBoard.WebApi.Hubs;
 using MediatR;
@@ -116,6 +117,20 @@ public class LabelsController : ControllerBase
 
         await _hubContext.Clients.Group(boardId.ToString())
             .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("labels")]
+    public async Task<IActionResult> GetBoardLabelsAsync(Guid boardId)
+    {
+        var query = new GetBoardLabelsQuery(boardId);
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
 
         return Ok(result.Value);
     }

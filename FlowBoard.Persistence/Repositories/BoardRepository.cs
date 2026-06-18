@@ -5,6 +5,7 @@ using FlowBoard.Domain.DTOs.Attachments;
 using FlowBoard.Domain.DTOs.Boards;
 using FlowBoard.Domain.DTOs.CardAssignee;
 using FlowBoard.Domain.DTOs.Cards;
+using FlowBoard.Domain.DTOs.Checklists;
 using FlowBoard.Domain.DTOs.Labels;
 using FlowBoard.Domain.DTOs.Lists;
 using FlowBoard.Domain.DTOs.Users;
@@ -135,6 +136,20 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             WHERE li.BoardId = @BoardId;
             """;
 
+        const string sqlChecklistItems = """
+            SELECT 
+                ci.Id,
+                ci.CardId,
+                ci.Text,
+                ci.IsCompleted,
+                ci.Position
+            FROM ChecklistItems ci
+            JOIN Cards c ON c.Id = ci.CardId
+            JOIN Lists li ON li.Id = c.ListId
+            WHERE li.BoardId = @BoardId
+            ORDER BY ci.Position;
+            """;
+
         var boardDictionary = new Dictionary<Guid, BoardDetailsDto>();
         var listDictionary = new Dictionary<Guid, ListDto>();
         var cardDictionary = new Dictionary<Guid, CardDto>();
@@ -230,6 +245,21 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                         Name = row.Name,
                         Color = row.Color
                     }).ToList();
+                }
+            }
+
+            var checklistItems = await _connection.QueryAsync<ChecklistItemDto>(
+                sqlChecklistItems, new { BoardId = boardId });
+
+            var checklistLookup = checklistItems
+                .GroupBy(x => x.CardId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+            
+            foreach (var card in boardDetails.Lists.SelectMany(l => l.Cards))
+            {
+                if (checklistLookup.TryGetValue(card.Id, out var items))
+                {
+                    card.ChecklistItems = items;
                 }
             }
 

@@ -1,5 +1,6 @@
 using FlowBoard.Domain.DTOs.Attachments;
 using FlowBoard.Domain.DTOs.CardAssignee;
+using FlowBoard.Domain.DTOs.Checklists;
 using FlowBoard.Domain.DTOs.Labels;
 
 namespace FlowBoard.Domain.DTOs.Cards;
@@ -25,4 +26,6 @@ public class CardDto
     public List<CardAssigneeDto> Assignees { get; set; } = [];
 
     public List<LabelDto> Labels { get; set; } = [];
+
+    public List<ChecklistItemDto> ChecklistItems { get; set; } = [];
 }

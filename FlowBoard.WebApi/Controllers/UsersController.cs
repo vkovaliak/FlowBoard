@@ -1,5 +1,6 @@
 using FlowBoard.Application.Features.Users.Commands.UpdateAvatar;
 using FlowBoard.Application.Features.Users.Commands.UpdateUserName;
+using FlowBoard.Application.Features.Users.Queries.GetCurrentUser;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -46,6 +47,20 @@ public class UsersController : ControllerBase
         UpdateUserNameCommand command)
     {
         var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMeAsync()
+    {
+        var query = new GetCurrentUserQuery();
+        var result = await _mediator.Send(query);
 
         if (result.IsFailed)
         {

@@ -24,7 +24,11 @@ public class UnitOfWork : IUnitOfWork
     private ICardLabelRepository? _cardLabels;
     public ICardLabelRepository CardLabelRepository
         => _cardLabels ??= new CardLabelRepository(_connection, _transaction);
-    
+
+    private IChecklistItemRepository? _checklistItems;
+    public IChecklistItemRepository ChecklistItemRepository
+        => _checklistItems ??= new ChecklistItemRepository(_connection, _transaction);
+        
     private ICommentRepository? _comment;
     public ICommentRepository CommentRepository
         => _comment ??= new CommentRepository(_connection, _transaction);

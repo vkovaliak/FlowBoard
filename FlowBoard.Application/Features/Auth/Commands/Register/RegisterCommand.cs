@@ -6,5 +6,6 @@ namespace FlowBoard.Application.Features.Auth.Commands.Register;
 
 public record RegisterCommand(
     string Email, 
-    string Password) 
+    string Password,
+    string UserName) 
     : IRequest<Result<TokenDto>>;

@@ -7,8 +7,13 @@ namespace FlowBoard.Domain.Entities;
 public class User : BaseEntity<Guid>
 {
     public required string EmailAddress { get; set; }
+
+    public required string UserName { get; set; }
+
     public required string PasswordHash { get; set; }
 
     [Editable(false)]
     public DateTime SignupDate { get; set; }
+
+    public string? AvatarUrl { get; set; }
 }

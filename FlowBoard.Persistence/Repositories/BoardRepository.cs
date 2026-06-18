@@ -98,7 +98,9 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 a.BlobUrl,
 
                 u.Id AS UserId,
-                u.EmailAddress
+                u.EmailAddress,
+                u.UserName,
+                u.AvatarUrl
 
             FROM Boards b
             LEFT JOIN BoardMembers bm ON bm.BoardId = b.Id AND bm.UserId = @UserId
@@ -117,7 +119,9 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             SELECT 
                 bm.UserId,
                 u.EmailAddress,
-                bm.[Role]
+                bm.[Role],
+                u.UserName,
+                u.AvatarUrl
             FROM BoardMembers bm
             JOIN Users u ON bm.UserId = u.Id
             WHERE bm.BoardId = @BoardId;

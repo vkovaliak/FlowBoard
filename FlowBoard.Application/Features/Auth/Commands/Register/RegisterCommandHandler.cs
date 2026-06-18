@@ -35,6 +35,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<To
                 Id = Guid.NewGuid(),
                 EmailAddress = request.Email,
                 PasswordHash = passwordHash,
+                UserName = request.UserName
             };
 
             await uow.UserRepository.CreateAsync(user);

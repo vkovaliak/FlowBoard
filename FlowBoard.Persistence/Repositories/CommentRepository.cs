@@ -26,7 +26,7 @@ public class CommentRepository : BaseRepository<Comment, Guid>, ICommentReposito
                 c.CreatedBy,
                 u.EmailAddress AS Email,
                 u.UserName,
-                u.Avatar,
+                u.AvatarUrl,
 
                 a.Id,
                 a.FileName,

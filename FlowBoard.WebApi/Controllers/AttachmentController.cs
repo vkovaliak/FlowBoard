@@ -17,11 +17,16 @@ namespace FlowBoard.WebApi.Controllers;
 public class AttachmentController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IHubContext<BoardHub> _boardHubContext;
     private readonly IHubContext<CommentHub> _commentHubContext;
 
-    public AttachmentController(IMediator mediator, IHubContext<CommentHub> commentHubContext)
+    public AttachmentController(
+        IMediator mediator,
+        IHubContext<BoardHub> boardHubContext,
+        IHubContext<CommentHub> commentHubContext)
     {
         _mediator = mediator;
+        _boardHubContext = boardHubContext;
         _commentHubContext = commentHubContext;
     }
 
@@ -47,8 +52,8 @@ public class AttachmentController : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
-        await _commentHubContext.Clients.Group(cardId.ToString())
-            .SendAsync(HubMethods.CardAttachmentsChanged, cardId);
+        await _boardHubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
 
         return Ok(result.Value);
     }
@@ -75,8 +80,8 @@ public class AttachmentController : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
-        await _commentHubContext.Clients.Group(cardId.ToString())
-            .SendAsync(HubMethods.CommentUpdated, result.Value);
+        await _commentHubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.CommentUpdated, boardId);
 
         return Ok(result.Value);
     }
@@ -94,8 +99,8 @@ public class AttachmentController : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
-        await _commentHubContext.Clients.Group(cardId.ToString())
-            .SendAsync(HubMethods.CardAttachmentsChanged, cardId);
+        await _boardHubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
 
         return Ok(result);
     }
@@ -113,8 +118,8 @@ public class AttachmentController : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
-        await _commentHubContext.Clients.Group(cardId.ToString())
-            .SendAsync(HubMethods.CommentUpdated, attachmentId);
+        await _commentHubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.CommentUpdated, boardId);
 
         return Ok(result);
     }

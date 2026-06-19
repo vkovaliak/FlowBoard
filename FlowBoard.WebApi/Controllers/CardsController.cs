@@ -2,9 +2,12 @@ using FlowBoard.Application.Features.Cards.Commands.AssignMember;
 using FlowBoard.Application.Features.Cards.Commands.CreateCard;
 using FlowBoard.Application.Features.Cards.Commands.DeleteCard;
 using FlowBoard.Application.Features.Cards.Commands.MoveCard;
+using FlowBoard.Application.Features.Cards.Commands.RenameCard;
+using FlowBoard.Application.Features.Cards.Commands.SetCardDueDate;
 using FlowBoard.Application.Features.Cards.Commands.ToggleCardCompletion;
 using FlowBoard.Application.Features.Cards.Commands.UnassignMember;
 using FlowBoard.Application.Features.Cards.Commands.UpdateCard;
+using FlowBoard.Application.Features.Cards.Commands.UpdateCardDescription;
 using FlowBoard.Domain.Constants;
 using FlowBoard.WebApi.Hubs;
 using MediatR;
@@ -168,6 +171,60 @@ public class CardsController : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
         
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpPut("cards/{cardId:guid}/name")]
+    public async Task<IActionResult> RenameCardAsync(
+        Guid boardId, Guid cardId, RenameCardCommand command)
+    {
+        var updatedCommand = command with { BoardId = boardId, CardId = cardId };
+        var result = await _mediator.Send(updatedCommand);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpPut("cards/{cardId:guid}/description")]
+    public async Task<IActionResult> UpdateDescriptionAsync(
+        Guid boardId, Guid cardId, UpdateCardDescriptionCommand command)
+    {
+        var updatedCommand = command with { BoardId = boardId, CardId = cardId };
+        var result = await _mediator.Send(updatedCommand);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpPut("cards/{cardId:guid}/due-date")]
+    public async Task<IActionResult> SetDueDateAsync(
+        Guid boardId, Guid cardId, SetCardDueDateCommand command)
+    {
+        var updatedCommand = command with { BoardId = boardId, CardId = cardId };
+        var result = await _mediator.Send(updatedCommand);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
         await _hubContext.Clients.Group(boardId.ToString())
             .SendAsync(HubMethods.BoardUpdated, boardId);
 

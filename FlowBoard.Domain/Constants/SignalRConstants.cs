@@ -10,5 +10,4 @@ public static class HubMethods
 {
     public const string CommentUpdated = "CommentUpdated";
     public const string BoardUpdated = "BoardUpdated";
-    public const string CardAttachmentsChanged = "CardAttachmentsChanged";
 }

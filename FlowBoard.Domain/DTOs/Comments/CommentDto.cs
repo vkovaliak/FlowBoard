@@ -11,6 +11,6 @@ public record CommentDto
     public Guid CreatedBy { get; set; }
     public string Email { get; set; } = default!;
     public required string UserName { get; set; }
-    public string? Avatar { get; set; }
+    public string? AvatarUrl { get; set; }
     public IReadOnlyList<AttachmentResponseDto> Attachments { get; set; } = default!;
 };

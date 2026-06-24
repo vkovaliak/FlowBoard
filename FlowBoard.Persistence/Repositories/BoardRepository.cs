@@ -292,4 +292,19 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
 
         return (BoardRole)roleValue.Value;
     }
+
+    public async Task<bool> RemoveMemberAsync(Guid boardId, Guid userId)
+    {
+        const string sql = """
+            DELETE FROM BoardMembers
+            WHERE BoardId = @BoardId AND UserId = @UserId;
+            """;
+
+        var affected = await _connection.ExecuteAsync(
+            sql,
+            new { BoardId = boardId, UserId = userId },
+            transaction: _transaction);
+
+        return affected > 0;
+    }
 }

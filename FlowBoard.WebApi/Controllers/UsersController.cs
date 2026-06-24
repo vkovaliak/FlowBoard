@@ -1,3 +1,4 @@
+using FlowBoard.Application.Features.Users.Commands.DeleteAvatar;
 using FlowBoard.Application.Features.Users.Commands.UpdateAvatar;
 using FlowBoard.Application.Features.Users.Commands.UpdateUserName;
 using FlowBoard.Application.Features.Users.Queries.GetCurrentUser;
@@ -40,6 +41,20 @@ public class UsersController : ControllerBase
 
         return Ok(new { 
             avatarUrl = result.Value });
+    }
+
+    [HttpDelete("avatar")]
+    public async Task<IActionResult> DeleteAvatarAsync()
+    {
+        var command = new DeleteAvatarCommand();
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
     }
 
     [HttpPut("username")]

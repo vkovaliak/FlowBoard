@@ -27,6 +27,11 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<TokenDto
             return Result.Fail("Invalid email.");
         }
 
+        if (string.IsNullOrEmpty(user.PasswordHash))
+        {
+            return Result.Fail("This account uses external sign-in. Please use Microsoft.");
+        }
+
         var isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
         if (!isPasswordValid)
         {

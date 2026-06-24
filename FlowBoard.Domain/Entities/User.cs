@@ -10,10 +10,14 @@ public class User : BaseEntity<Guid>
 
     public required string UserName { get; set; }
 
-    public required string PasswordHash { get; set; }
+    public string? PasswordHash { get; set; }
 
     [Editable(false)]
     public DateTime SignupDate { get; set; }
 
     public string? AvatarUrl { get; set; }
+
+    public string? ExternalProvider { get; set; }
+
+    public string? ExternalId { get; set; }
 }

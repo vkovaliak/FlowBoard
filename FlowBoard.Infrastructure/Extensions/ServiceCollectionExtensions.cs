@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IExternalAuthService, ExternalAuthService>();
         services.AddScoped<IJwtProvider, JwtProvider>();
 
         services.AddSingleton(sp =>

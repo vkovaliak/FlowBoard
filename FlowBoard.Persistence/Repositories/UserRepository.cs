@@ -27,4 +27,18 @@ public class UserRepository : BaseRepository<User, Guid>, IUserRepository
             new { Email = email }, 
             _transaction);
     }
+
+    public async Task<User?> GetByExternalIdAsync(string provider, string externalId)
+    {
+        const string sql = """
+            SELECT * FROM Users
+            WHERE ExternalProvider = @Provider
+            AND ExternalId = @ExternalId
+            """;
+
+        return await _connection.QueryFirstOrDefaultAsync<User>(
+            sql,
+            new { Provider = provider, ExternalId = externalId },
+            _transaction);
+    }
 }

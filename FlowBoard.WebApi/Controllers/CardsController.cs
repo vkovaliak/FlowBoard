@@ -8,6 +8,7 @@ using FlowBoard.Application.Features.Cards.Commands.ToggleCardCompletion;
 using FlowBoard.Application.Features.Cards.Commands.UnassignMember;
 using FlowBoard.Application.Features.Cards.Commands.UpdateCard;
 using FlowBoard.Application.Features.Cards.Commands.UpdateCardDescription;
+using FlowBoard.Application.Features.Cards.Queries.GetMyCards;
 using FlowBoard.Domain.Constants;
 using FlowBoard.WebApi.Hubs;
 using MediatR;
@@ -227,6 +228,19 @@ public class CardsController : ControllerBase
 
         await _hubContext.Clients.Group(boardId.ToString())
             .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("/api/my-tasks")]
+    public async Task<IActionResult> GetMyTasksAsync()
+    {
+        var result = await _mediator.Send(new GetMyCardsQuery());
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
 
         return Ok(result.Value);
     }

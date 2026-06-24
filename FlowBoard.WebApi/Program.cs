@@ -41,21 +41,32 @@ var jwtOptions = builder.Configuration
     .GetSection(JwtOptions.SectionName)
     .Get<JwtOptions>();
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.Configure<EntraIdOptions>(
+    builder.Configuration.GetSection(EntraIdOptions.SectionName));
+
+var entraOptions = builder.Configuration
+    .GetSection(EntraIdOptions.SectionName)
+    .Get<EntraIdOptions>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtOptions!.Issuer,
-            ValidAudience = jwtOptions!.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtOptions!.SecretKey))
-        };
-    });
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtOptions!.Issuer,
+        ValidAudience = jwtOptions!.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtOptions!.SecretKey))
+    };
+});
 
 var corsOptions = builder.Configuration
     .GetSection(CorsOptions.SectionName)

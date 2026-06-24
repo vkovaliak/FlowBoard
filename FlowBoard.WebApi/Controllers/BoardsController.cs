@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using FlowBoard.WebApi.Hubs;
 using FlowBoard.Domain.Constants;
+using FlowBoard.Application.Features.Boards.Commands.RemoveMember;
+using FlowBoard.Application.Features.Boards.Commands.LeaveBoard;
 
 namespace FlowBoard.WebApi.Controllers;
 
@@ -116,6 +118,40 @@ public class BoardsController : ControllerBase
         await _hubContext.Clients.Group(boardId.ToString())
             .SendAsync(HubMethods.BoardUpdated, boardId);
         
+        return Ok(result.Value);
+    }
+
+    [HttpDelete("{boardId:guid}/members/{userId:guid}")]
+    public async Task<IActionResult> RemoveMemberAsync(Guid boardId, Guid userId)
+    {
+        var command = new RemoveMemberCommand(boardId, userId);
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpDelete("{boardId:guid}/leave")]
+    public async Task<IActionResult> LeaveBoardAsync(Guid boardId)
+    {
+        var command = new LeaveBoardCommand(boardId);
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
+
         return Ok(result.Value);
     }
 }

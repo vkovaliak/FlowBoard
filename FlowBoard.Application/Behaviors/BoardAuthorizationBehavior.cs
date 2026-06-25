@@ -33,7 +33,8 @@ public class BoardAuthorizationBehavior<TRequest, TResponse>
         var boardIdProp = typeof(TRequest).GetProperty("BoardId");
 
         var commandName = typeof(TRequest).Name;
-        if (commandName == "LeaveBoardCommand")
+        if (commandName == "LeaveBoardCommand" 
+            || commandName == "ToggleFavoriteCommand")
         {
             return await next();
         }

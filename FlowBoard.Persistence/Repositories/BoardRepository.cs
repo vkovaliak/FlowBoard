@@ -57,9 +57,10 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 b.Name, 
                 b.IsPublic, 
                 b.CreatedBy, 
-                b.CreatedAt
+                b.CreatedAt,
+                ISNULL(bm.IsFavorite, 0) AS IsFavorite
             FROM Boards b
-            LEFT JOIN BoardMembers bm ON b.Id = bm.BoardId
+            LEFT JOIN BoardMembers bm ON b.Id = bm.BoardId AND bm.UserId = @UserId
             WHERE b.CreatedBy = @UserId 
                OR bm.UserId = @UserId
             ORDER BY b.CreatedAt DESC";
@@ -304,6 +305,22 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             sql,
             new { BoardId = boardId, UserId = userId },
             transaction: _transaction);
+
+        return affected > 0;
+    }
+
+    public async Task<bool> ToggleFavoriteAsync(Guid boardId, Guid userId)
+    {
+        const string sql = """
+            UPDATE BoardMembers
+            SET IsFavorite = CASE WHEN IsFavorite = 1 THEN 0 ELSE 1 END
+            WHERE BoardId = @BoardId AND UserId = @UserId;
+            """;
+
+        var affected = await _connection.ExecuteAsync(
+            sql,
+            new { BoardId = boardId, UserId = userId },
+            _transaction);
 
         return affected > 0;
     }

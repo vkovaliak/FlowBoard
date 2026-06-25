@@ -12,6 +12,7 @@ using FlowBoard.WebApi.Hubs;
 using FlowBoard.Domain.Constants;
 using FlowBoard.Application.Features.Boards.Commands.RemoveMember;
 using FlowBoard.Application.Features.Boards.Commands.LeaveBoard;
+using FlowBoard.Application.Features.Boards.Commands.ToggleFavorite;
 
 namespace FlowBoard.WebApi.Controllers;
 
@@ -151,6 +152,20 @@ public class BoardsController : ControllerBase
 
         await _hubContext.Clients.Group(boardId.ToString())
             .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpPut("{boardId:guid}/favorite")]
+    public async Task<IActionResult> ToggleFavoriteAsync(Guid boardId)
+    {
+        var command = new ToggleFavoriteCommand(boardId);
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
 
         return Ok(result.Value);
     }

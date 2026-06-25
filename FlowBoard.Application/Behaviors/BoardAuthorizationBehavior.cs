@@ -31,6 +31,12 @@ public class BoardAuthorizationBehavior<TRequest, TResponse>
         }
 
         var boardIdProp = typeof(TRequest).GetProperty("BoardId");
+
+        var commandName = typeof(TRequest).Name;
+        if (commandName == "LeaveBoardCommand")
+        {
+            return await next();
+        }
         
         if (boardIdProp?.GetValue(request) is Guid boardId)
         {

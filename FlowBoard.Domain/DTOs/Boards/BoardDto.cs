@@ -5,4 +5,5 @@ public record BoardDto(
     string Name,
     bool IsPublic,
     Guid CreatedBy,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    bool IsFavorite);

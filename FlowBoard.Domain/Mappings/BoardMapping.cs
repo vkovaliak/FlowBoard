@@ -12,7 +12,8 @@ public static class BoardMapping
             board.Name,
             board.IsPublic,
             board.CreatedBy,
-            board.CreatedAt
+            board.CreatedAt,
+            board.IsFavorite
         );
     }
 
@@ -24,7 +25,8 @@ public static class BoardMapping
             Name = dto.Name,
             IsPublic = dto.IsPublic,
             CreatedBy = dto.CreatedBy,
-            CreatedAt = dto.CreatedAt
+            CreatedAt = dto.CreatedAt,
+            IsFavorite = dto.IsFavorite
         };
     }
 }

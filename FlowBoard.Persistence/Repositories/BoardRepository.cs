@@ -49,7 +49,7 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
         return result > 0;
     }
 
-    public async Task<IEnumerable<Board>> GetByUserIdAsync(Guid userId)
+    public async Task<IEnumerable<BoardDto>> GetByUserIdAsync(Guid userId)
     {
         const string sql = @"
             SELECT DISTINCT 
@@ -65,7 +65,7 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                OR bm.UserId = @UserId
             ORDER BY b.CreatedAt DESC";
 
-        return await _connection.QueryAsync<Board>(
+        return await _connection.QueryAsync<BoardDto>(
             sql, 
             new { UserId = userId });
     }
@@ -79,6 +79,7 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 b.IsPublic,
                 b.CreatedBy,
                 b.CreatedAt,
+                bm.IsFavorite,
                 bm.[Role] AS UserRole,
 
                 l.Id,

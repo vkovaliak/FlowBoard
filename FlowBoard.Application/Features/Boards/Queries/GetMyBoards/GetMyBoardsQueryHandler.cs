@@ -1,6 +1,5 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.DTOs.Boards;
-using FlowBoard.Domain.Mappings;
 using FluentResults;
 using MediatR;
 
@@ -21,8 +20,7 @@ public class GetMyBoardsQueryHandler : IRequestHandler<GetMyBoardsQuery, Result<
     {
         var currentUserId = _currentUserService.GetId();
         var boards = await _boardRepository.GetByUserIdAsync(currentUserId);
-        var result =  boards.Select(BoardMapping.ToDto).ToList().AsEnumerable();
 
-        return Result.Ok(result);
+        return Result.Ok(boards);
     }
 }

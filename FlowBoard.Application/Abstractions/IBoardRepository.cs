@@ -7,7 +7,7 @@ namespace FlowBoard.Application.Abstractions;
 public interface IBoardRepository : IBaseRepository<Board, Guid>
 {
     Task AddMemberAsync(Guid boardId, Guid userId, BoardRole role);
-    Task<IEnumerable<Board>> GetByUserIdAsync(Guid userId);
+    Task<IEnumerable<BoardDto>> GetByUserIdAsync(Guid userId);
     Task<BoardDetailsDto?> GetDetailsAsync(Guid boardId, Guid userId);
     Task<bool> IsMemberAsync(Guid boardId, Guid userId);
     Task<BoardRole?> GetUserRoleAsync(Guid boardId, Guid userId);

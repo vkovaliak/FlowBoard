@@ -18,6 +18,4 @@ public class Board : BaseEntity<Guid>
     public DateTime? UpdatedAt { get; set; }
     
     public Guid? UpdatedBy { get; set; }
-
-    public bool IsFavorite { get; set; }
 }

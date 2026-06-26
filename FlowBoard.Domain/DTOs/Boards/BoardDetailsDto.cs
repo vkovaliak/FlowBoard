@@ -16,6 +16,8 @@ public class BoardDetailsDto
     
     public DateTime CreatedAt { get; set; }
 
+    public bool IsFavorite { get; set; }
+
     public BoardRole? UserRole { get; set; }
     
     public List<ListDto> Lists { get; set; } = [];

@@ -1,4 +1,5 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Constants;
 using FluentResults;
 using MediatR;
 
@@ -25,19 +26,19 @@ public class DeleteListCommandHandler : IRequestHandler<DeleteListCommand, Resul
             var board = await uow.BoardRepository.GetByIdAsync(command.BoardId);
             if (board is null)
             {
-                return Result.Fail("Board not found");
+                return Result.Fail(ErrorMessages.BoardNotFound);
             }
             
             var isMember = await uow.BoardRepository.IsMemberAsync(command.BoardId, currentUserId);
             if (!isMember && board.CreatedBy != currentUserId)
             {
-                return Result.Fail("You don't have access to this board");
+                return Result.Fail(ErrorMessages.NoBoardAccess);
             }
 
             var list = await uow.ListRepository.GetByIdAsync(command.ListId);
             if (list is null)
             {
-                return Result.Fail("List is not found");
+                return Result.Fail(ErrorMessages.ListNotFound);
             }
 
             var deletedPosition = list.Position;
@@ -58,7 +59,7 @@ public class DeleteListCommandHandler : IRequestHandler<DeleteListCommand, Resul
         catch
         {
             uow.Rollback();
-            return false;
+            throw;
         }
         
 

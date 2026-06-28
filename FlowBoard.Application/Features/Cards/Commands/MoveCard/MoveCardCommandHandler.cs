@@ -1,4 +1,5 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Constants;
 using FluentResults;
 using MediatR;
 
@@ -25,7 +26,7 @@ public class MoveCardCommandHandler : IRequestHandler<MoveCardCommand, Result<bo
             var card = await uow.CardRepository.GetByIdAsync(request.CardId);
             if (card == null)
             {
-                return Result.Fail("Card not found");
+                return Result.Fail(ErrorMessages.CardNotFound);
             }
 
             var targetList = await uow.ListRepository.GetByIdAsync(request.NewListId);

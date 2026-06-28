@@ -1,4 +1,5 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Constants;
 using FluentResults;
 using MediatR;
 
@@ -28,20 +29,20 @@ public class UpdateCardDescriptionommandHandler
             var board = await uow.BoardRepository.GetByIdAsync(command.BoardId);
             if (board is null)
             {
-                return Result.Fail("Board not found");
+                return Result.Fail(ErrorMessages.BoardNotFound);
             }
 
             var isMember = await uow.BoardRepository.IsMemberAsync(
                 command.BoardId, currentUserId);
             if (!isMember && board.CreatedBy != currentUserId)
             {
-                return Result.Fail("You don't have access to this board");
+                return Result.Fail(ErrorMessages.NoBoardAccess);
             }
 
             var card = await uow.CardRepository.GetByIdAsync(command.CardId);
             if (card is null)
             {
-                return Result.Fail("Card not found");
+                return Result.Fail(ErrorMessages.CardNotFound);
             }
 
             card.Description = command.Description;

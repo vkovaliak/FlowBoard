@@ -1,4 +1,5 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Constants;
 using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
@@ -29,7 +30,7 @@ public class LeaveBoardCommandHandler
             var board = await uow.BoardRepository.GetByIdAsync(request.BoardId);
             if (board is null)
             {
-                return Result.Fail("Board not found.");
+                return Result.Fail(ErrorMessages.BoardNotFound);
             }
 
             var currentUserRole = await uow.BoardRepository.GetUserRoleAsync(

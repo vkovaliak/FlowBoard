@@ -2,6 +2,7 @@ using MediatR;
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.Entities;
 using FluentResults;
+using FlowBoard.Domain.Constants;
 
 namespace FlowBoard.Application.Features.Comments.Commands.CreateComment;
 
@@ -25,7 +26,7 @@ public class CreateCommentCommandHandler : IRequestHandler<CreateCommentCommand,
             var card = await uow.CardRepository.GetByIdAsync(request.CardId);
             if (card == null)
             {
-                return Result.Fail($"Card not found."); 
+                return Result.Fail(ErrorMessages.CardNotFound); 
             }
 
             var comment = new Comment

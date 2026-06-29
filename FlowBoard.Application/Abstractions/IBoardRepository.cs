@@ -15,4 +15,5 @@ public interface IBoardRepository : IBaseRepository<Board, Guid>
     Task<bool> ToggleFavoriteAsync(Guid boardId, Guid userId);
     Task<IEnumerable<BoardArchiveDto>> GetByArchiveStatusAsync(
         ArchiveStatus status);
+    Task UpdateArchiveStatusAsync(Guid boardId, ArchiveStatus status);
 }

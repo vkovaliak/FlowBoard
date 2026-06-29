@@ -346,4 +346,18 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             new { Status = (int)status },
             _transaction);
     }
+
+    public async Task UpdateArchiveStatusAsync(Guid boardId, ArchiveStatus status)
+    {
+        const string sql = """
+            UPDATE Boards
+            SET ArchiveStatus = @Status
+            WHERE Id = @BoardId;
+            """;
+
+        await _connection.ExecuteAsync(
+            sql,
+            new { BoardId = boardId, Status = (int)status },
+            _transaction);
+    }
 }

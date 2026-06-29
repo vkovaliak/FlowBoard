@@ -45,7 +45,7 @@ public class ArchiveBoardCommandHandler
                 return Result.Fail("This board is already archived.");
             }
 
-            board.ArchiveStatus = ArchiveStatus.Archived;
+            board.ArchiveStatus = ArchiveStatus.Pending;
             board.ArchivedAt = DateTime.UtcNow;
 
             await uow.BoardRepository.UpdateAsync(board);

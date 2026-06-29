@@ -95,6 +95,10 @@ builder.Services.AddHangfire(config => config
     .UseSqlServerStorage(databaseOptions!.ConnectionString));
 
 builder.Services.AddHangfireServer();
+
+builder.Services.Configure<ServiceBusOptions>(
+    builder.Configuration.GetSection(ServiceBusOptions.SectionName));
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())

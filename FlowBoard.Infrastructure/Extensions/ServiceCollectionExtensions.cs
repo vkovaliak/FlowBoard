@@ -2,6 +2,8 @@ using Azure.Storage.Blobs;
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Infrastructure.Auth;
 using FlowBoard.Infrastructure.Configurations;
+using FlowBoard.Infrastructure.Jobs;
+using FlowBoard.Infrastructure.Messaging;
 using FlowBoard.Infrastructure.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -12,9 +14,12 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
+        services.AddScoped<IArchiveJob, ArchiveJob>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IExternalAuthService, ExternalAuthService>();
         services.AddScoped<IJwtProvider, JwtProvider>();
+
+        services.AddSingleton<IArchiveMessagePublisher, ServiceBusMessagePublisher>();
 
         services.AddSingleton(sp =>
         {

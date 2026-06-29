@@ -13,4 +13,7 @@ public interface IBoardRepository : IBaseRepository<Board, Guid>
     Task<BoardRole?> GetUserRoleAsync(Guid boardId, Guid userId);
     Task<bool> RemoveMemberAsync(Guid boardId, Guid userId);
     Task<bool> ToggleFavoriteAsync(Guid boardId, Guid userId);
+    Task<IEnumerable<BoardArchiveDto>> GetByArchiveStatusAsync(
+        ArchiveStatus status);
+    Task UpdateArchiveStatusAsync(Guid boardId, ArchiveStatus status);
 }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using FlowBoard.Domain.Enums;
 
 namespace FlowBoard.Domain.Entities;
 
@@ -18,4 +19,7 @@ public class Board : BaseEntity<Guid>
     public DateTime? UpdatedAt { get; set; }
     
     public Guid? UpdatedBy { get; set; }
+
+    public ArchiveStatus ArchiveStatus { get; set; } = ArchiveStatus.None;
+    public DateTime? ArchivedAt { get; set; }
 }

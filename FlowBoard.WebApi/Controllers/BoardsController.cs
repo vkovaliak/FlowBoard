@@ -13,6 +13,7 @@ using FlowBoard.Domain.Constants;
 using FlowBoard.Application.Features.Boards.Commands.RemoveMember;
 using FlowBoard.Application.Features.Boards.Commands.LeaveBoard;
 using FlowBoard.Application.Features.Boards.Commands.ToggleFavorite;
+using FlowBoard.Application.Features.Boards.Commands.ArchiveBoard;
 
 namespace FlowBoard.WebApi.Controllers;
 
@@ -160,6 +161,20 @@ public class BoardsController : ControllerBase
     public async Task<IActionResult> ToggleFavoriteAsync(Guid boardId)
     {
         var command = new ToggleFavoriteCommand(boardId);
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPatch("{boardId:guid}/archive")]
+    public async Task<IActionResult> ArchiveBoardAsync(Guid boardId)
+    {
+        var command = new ArchiveBoardCommand(boardId);
         var result = await _mediator.Send(command);
 
         if (result.IsFailed)

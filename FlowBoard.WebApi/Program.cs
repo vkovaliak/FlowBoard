@@ -11,6 +11,8 @@ using FlowBoard.WebApi.Configurations;
 using FlowBoard.WebApi.Hubs;
 using FlowBoard.Domain.Constants;
 using System.Text.Json.Serialization;
+using Hangfire;
+using FlowBoard.Application.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,6 +84,17 @@ builder.Services.AddCors(options =>
     });
 });
 
+var databaseOptions = builder.Configuration
+    .GetSection(DatabaseOptions.SectionName)
+    .Get<DatabaseOptions>();
+
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(databaseOptions!.ConnectionString));
+
+builder.Services.AddHangfireServer();
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -101,6 +114,13 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseHangfireDashboard(HangfireConstants.DashboardPath);
+
+RecurringJob.AddOrUpdate<IArchiveJob>(
+    HangfireConstants.ArchiveBoardsJobId,
+    job => job.ProcessArchivedBoardsAsync(),
+    HangfireConstants.ArchiveBoardsJobCron);
 
 app.MapHub<BoardHub>(HubRoutes.Boards);
 app.MapHub<CommentHub>(HubRoutes.Comments);

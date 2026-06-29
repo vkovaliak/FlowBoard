@@ -325,4 +325,25 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
 
         return affected > 0;
     }
+
+    public async Task<IEnumerable<BoardArchiveDto>> GetByArchiveStatusAsync(
+        ArchiveStatus status)
+    {
+        const string sql = """
+            SELECT 
+                Id, 
+                Name, 
+                IsPublic, 
+                CreatedBy, 
+                CreatedAt, 
+                ArchivedAt
+            FROM Boards
+            WHERE ArchiveStatus = @Status;
+            """;
+
+        return await _connection.QueryAsync<BoardArchiveDto>(
+            sql,
+            new { Status = (int)status },
+            _transaction);
+    }
 }

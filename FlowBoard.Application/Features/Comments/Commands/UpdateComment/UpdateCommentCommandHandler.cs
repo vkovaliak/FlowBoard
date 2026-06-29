@@ -1,6 +1,7 @@
 using MediatR;
 using FlowBoard.Application.Abstractions;
 using FluentResults;
+using FlowBoard.Domain.Constants;
 
 namespace FlowBoard.Application.Features.Comments.Commands.UpdateComment;
 
@@ -25,7 +26,7 @@ public class UpdateCommentCommandHandler : IRequestHandler<UpdateCommentCommand,
             var card = await uow.CardRepository.GetByIdAsync(request.CardId);
             if (card == null)
             {
-                return Result.Fail($"Card not found."); 
+                return Result.Fail(ErrorMessages.CardNotFound); 
             }
 
             var comment = await uow.CommentRepository.GetByIdAsync(request.CommentId);

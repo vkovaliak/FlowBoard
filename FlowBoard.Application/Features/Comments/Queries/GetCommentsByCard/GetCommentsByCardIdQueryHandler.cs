@@ -2,6 +2,7 @@ using FluentResults;
 using MediatR;
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.DTOs.Comments;
+using FlowBoard.Domain.Constants;
 
 namespace FlowBoard.Application.Features.Comments.Queries.GetCommentsByCardId;
 
@@ -24,7 +25,7 @@ public class GetCommentsByCardIdQueryHandler :
         var card = await _cardRepository.GetByIdAsync(request.CardId);
         if (card == null)
         {
-            return Result.Fail("Card not found.");
+            return Result.Fail(ErrorMessages.CardNotFound);
         }
 
         var comments = await _commentRepository.GetCommentsByCardIdAsync(request.CardId);

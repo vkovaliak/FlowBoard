@@ -1,4 +1,5 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Constants;
 using FluentResults;
 using MediatR;
 
@@ -25,12 +26,12 @@ public class MoveListCommandHandler : IRequestHandler<MoveListCommand, Result<bo
         
             if (list == null) 
             {
-                return Result.Fail("List not found");
+                return Result.Fail(ErrorMessages.ListNotFound);
             }
 
             if (list.BoardId != request.BoardId)
             {
-                return Result.Fail("Board not found");
+                return Result.Fail(ErrorMessages.BoardNotFound);
             }
 
             int oldPosition = list.Position;

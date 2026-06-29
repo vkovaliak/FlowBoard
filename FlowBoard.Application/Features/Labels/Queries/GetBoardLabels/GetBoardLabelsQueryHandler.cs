@@ -1,4 +1,5 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Constants;
 using FlowBoard.Domain.DTOs.Labels;
 using FluentResults;
 using MediatR;
@@ -27,14 +28,14 @@ public class GetBoardLabelsQueryHandler
         var board = await uow.BoardRepository.GetByIdAsync(query.BoardId);
         if (board is null)
         {
-            return Result.Fail("Board not found");
+            return Result.Fail(ErrorMessages.BoardNotFound);
         }
 
         var isMember = await uow.BoardRepository.IsMemberAsync(
             query.BoardId, currentUserId);
         if (!isMember && board.CreatedBy != currentUserId)
         {
-            return Result.Fail("You don't have access to this board");
+            return Result.Fail(ErrorMessages.NoBoardAccess);
         }
 
         var labels = await uow.LabelRepository.GetByBoardIdAsync(query.BoardId);

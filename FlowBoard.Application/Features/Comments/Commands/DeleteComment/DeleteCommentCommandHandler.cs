@@ -1,4 +1,5 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Constants;
 using FluentResults;
 using MediatR;
 
@@ -25,13 +26,13 @@ public class UpdateCommentCommandHandler : IRequestHandler<DeleteCommentCommand,
             var card = await uow.CardRepository.GetByIdAsync(request.CardId);
             if (card == null)
             {
-                return Result.Fail($"Card not found."); 
+                return Result.Fail(ErrorMessages.CardNotFound); 
             }
 
             var comment = await uow.CommentRepository.GetByIdAsync(request.CommentId);
             if (comment == null)
             {
-                return Result.Fail($"Comment not found."); 
+                return Result.Fail("Comment not found."); 
             }
 
             if (comment.CreatedBy != currentUserId)

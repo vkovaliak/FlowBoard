@@ -7,4 +7,4 @@ public record UpdateBoardCommand(
     Guid BoardId,
     string Name, 
     bool IsPublic) 
-    : IRequest<Result<bool>>;
+    : IRequest<Result<Guid>>;

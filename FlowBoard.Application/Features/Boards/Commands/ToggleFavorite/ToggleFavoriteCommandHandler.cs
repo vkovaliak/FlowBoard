@@ -1,4 +1,5 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Constants;
 using FluentResults;
 using MediatR;
 
@@ -26,12 +27,17 @@ public class ToggleFavoriteCommandHandler
         using var uow = _uowFactory.Create();
         try
         {
+            var board = uow.BoardRepository.GetByIdAsync(command.BoardId);
+            if (board is null)
+            {
+                return Result.Fail(ErrorMessages.BoardNotFound);
+            }
             var success = await uow.BoardRepository.ToggleFavoriteAsync(
                 command.BoardId, currentUserId);
 
             if (!success)
             {
-                return Result.Fail("Board not found or you are not a member.");
+                return Result.Fail("You are not a member.");
             }
 
             uow.Commit();

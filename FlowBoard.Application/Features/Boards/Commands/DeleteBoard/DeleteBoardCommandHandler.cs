@@ -1,4 +1,5 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Constants;
 using FluentResults;
 using MediatR;
 
@@ -22,7 +23,7 @@ public class DeleteBoardCommandHandler : IRequestHandler<DeleteBoardCommand, Res
         var board = await _boardRepository.GetByIdAsync(request.BoardId);
         if (board is null)
         {
-            return Result.Fail("Board not found.");
+            return Result.Fail(ErrorMessages.BoardNotFound);
         }
 
         if (board.CreatedBy != currentUserId)

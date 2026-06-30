@@ -16,7 +16,7 @@ public class ArchiveBoardFunction
     }
 
     [Function(nameof(ArchiveBoardFunction))]
-    public void Run(
+    public async Task Run(
         [ServiceBusTrigger(
             ArchiveBoardConstants.BoardArchiveQueue, 
             Connection = ArchiveBoardConstants.BoardArchiveConnection)]
@@ -29,6 +29,6 @@ public class ArchiveBoardFunction
             return;
         }
 
-        _processor.ProcessAsync(message.BoardId);
+        await _processor.ProcessAsync(message.BoardId);
     }
 }

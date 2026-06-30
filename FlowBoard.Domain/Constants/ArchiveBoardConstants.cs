@@ -1,4 +1,4 @@
-namespace FlowBoard_Functions.Constants;
+namespace FlowBoard.Domain.Constants;
 
 public static class ArchiveBoardConstants
 {

@@ -62,6 +62,12 @@ public class ArchiveBoardProcessor : IArchiveBoardProcessor
             var blobUrl = await _fileStorage.UploadAsync(
                 stream, $"{boardId}.json", StorageConstants.ArchivedBoardsContainer);
 
+            using (var deleteUow = _uowFactory.Create())
+            {
+                await deleteUow.BoardRepository.DeleteBoardContentAsync(boardId);
+                deleteUow.Commit();
+            }
+
             await SetStatusAsync(boardId, ArchiveStatus.Completed);
             await _tracker.TrackCompletedAsync(boardId, blobUrl);
         }

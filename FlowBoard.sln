@@ -15,6 +15,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowBoard.WebApi", "FlowBoa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowBoard.Database", "FlowBoard.Database\FlowBoard.Database.csproj", "{3EE24159-FB5A-498B-93B8-1697B20AE233}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FlowBoard.Functions", "FlowBoard.Functions", "{A6D8C962-7560-A1BE-D5AA-A51CD337EED4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowBoard_Functions", "FlowBoard.Functions\FlowBoard_Functions.csproj", "{456CE7C5-EADF-47FB-82DA-BB877EC220EA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,8 +101,23 @@ Global
 		{3EE24159-FB5A-498B-93B8-1697B20AE233}.Release|x64.Build.0 = Release|Any CPU
 		{3EE24159-FB5A-498B-93B8-1697B20AE233}.Release|x86.ActiveCfg = Release|Any CPU
 		{3EE24159-FB5A-498B-93B8-1697B20AE233}.Release|x86.Build.0 = Release|Any CPU
+		{456CE7C5-EADF-47FB-82DA-BB877EC220EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{456CE7C5-EADF-47FB-82DA-BB877EC220EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{456CE7C5-EADF-47FB-82DA-BB877EC220EA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{456CE7C5-EADF-47FB-82DA-BB877EC220EA}.Debug|x64.Build.0 = Debug|Any CPU
+		{456CE7C5-EADF-47FB-82DA-BB877EC220EA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{456CE7C5-EADF-47FB-82DA-BB877EC220EA}.Debug|x86.Build.0 = Debug|Any CPU
+		{456CE7C5-EADF-47FB-82DA-BB877EC220EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{456CE7C5-EADF-47FB-82DA-BB877EC220EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{456CE7C5-EADF-47FB-82DA-BB877EC220EA}.Release|x64.ActiveCfg = Release|Any CPU
+		{456CE7C5-EADF-47FB-82DA-BB877EC220EA}.Release|x64.Build.0 = Release|Any CPU
+		{456CE7C5-EADF-47FB-82DA-BB877EC220EA}.Release|x86.ActiveCfg = Release|Any CPU
+		{456CE7C5-EADF-47FB-82DA-BB877EC220EA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{456CE7C5-EADF-47FB-82DA-BB877EC220EA} = {A6D8C962-7560-A1BE-D5AA-A51CD337EED4}
 	EndGlobalSection
 EndGlobal

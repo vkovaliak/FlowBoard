@@ -555,4 +555,17 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
 
         return boardArchive;
     }
+
+    public async Task DeleteBoardContentAsync(Guid boardId)
+    {
+        const string sql = """
+            DELETE FROM Lists WHERE BoardId = @BoardId;
+            DELETE FROM Labels WHERE BoardId = @BoardId;
+            DELETE FROM BoardMembers WHERE BoardId = @BoardId;
+            """;
+
+        await _connection.ExecuteAsync(
+            sql, new { BoardId = boardId }, 
+            _transaction);
+    }
 }

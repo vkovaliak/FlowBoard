@@ -17,4 +17,5 @@ public interface IBoardRepository : IBaseRepository<Board, Guid>
         ArchiveStatus status);
     Task UpdateArchiveStatusAsync(Guid boardId, ArchiveStatus status);
     Task<BoardArchiveDto?> GetForArchiveAsync(Guid boardId);
+    Task DeleteBoardContentAsync(Guid boardId);
 }

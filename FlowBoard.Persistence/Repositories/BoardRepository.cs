@@ -363,21 +363,196 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
 
     public async Task<BoardArchiveDto?> GetForArchiveAsync(Guid boardId)
     {
-        const string sql = """
-            SELECT 
-                Id, 
-                Name, 
-                IsPublic, 
-                CreatedBy, 
-                CreatedAt, 
-                ArchivedAt
-            FROM Boards
-            WHERE Id = @BoardId;
+        const string sqlBoardDetails = """
+            SELECT
+                b.Id,
+                b.Name,
+                b.IsPublic,
+                b.CreatedBy,
+                b.CreatedAt,
+                b.ArchivedAt,
+
+                l.Id,
+                l.BoardId,
+                l.Name,
+                l.Position,
+
+                c.Id,
+                c.ListId,
+                c.Name,
+                c.Description,
+                c.Position,
+                c.DueDate,
+                c.IsCompleted,
+
+                a.Id,
+                a.FileName,
+                a.BlobUrl,
+
+                u.Id AS UserId,
+                u.EmailAddress,
+                u.UserName,
+                u.AvatarUrl
+
+            FROM Boards b
+            LEFT JOIN Lists l ON l.BoardId = b.Id
+            LEFT JOIN Cards c ON c.ListId = l.Id
+            LEFT JOIN CardAttachments a ON a.CardId = c.Id
+            LEFT JOIN CardAssignees ca ON ca.CardId = c.Id
+            LEFT JOIN Users u ON u.Id = ca.UserId
+
+            WHERE b.Id = @BoardId
+
+            ORDER BY l.Position, c.Position;
             """;
 
-        return await _connection.QueryFirstOrDefaultAsync<BoardArchiveDto>(
-            sql,
+        const string sqlBoardMembers = """
+            SELECT 
+                bm.UserId,
+                u.EmailAddress,
+                bm.[Role],
+                u.UserName,
+                u.AvatarUrl
+            FROM BoardMembers bm
+            JOIN Users u ON bm.UserId = u.Id
+            WHERE bm.BoardId = @BoardId;
+            """;
+
+        const string sqlCardLabels = """
+            SELECT 
+                cl.CardId,
+                l.Id,
+                l.Name,
+                l.Color
+            FROM CardLabels cl
+            JOIN Labels l ON l.Id = cl.LabelId
+            JOIN Cards c ON c.Id = cl.CardId
+            JOIN Lists li ON li.Id = c.ListId
+            WHERE li.BoardId = @BoardId;
+            """;
+
+        const string sqlChecklistItems = """
+            SELECT 
+                ci.Id,
+                ci.CardId,
+                ci.Text,
+                ci.IsCompleted,
+                ci.Position
+            FROM ChecklistItems ci
+            JOIN Cards c ON c.Id = ci.CardId
+            JOIN Lists li ON li.Id = c.ListId
+            WHERE li.BoardId = @BoardId
+            ORDER BY ci.Position;
+            """;
+
+        var boardDictionary = new Dictionary<Guid, BoardArchiveDto>();
+        var listDictionary = new Dictionary<Guid, ListDto>();
+        var cardDictionary = new Dictionary<Guid, CardDto>();
+
+        await _connection.QueryAsync<
+            BoardArchiveDto,
+            ListDto,
+            CardDto,
+            AttachmentResponseDto,
+            CardAssigneeDto,
+            BoardArchiveDto>(
+            sqlBoardDetails,
+            (board, list, card, attachment, assignee) =>
+            {
+                if (!boardDictionary.TryGetValue(board.Id, out var boardEntry))
+                {
+                    boardEntry = board;
+                    boardEntry.Lists = [];
+                    boardEntry.Members = [];
+                    boardDictionary.Add(boardEntry.Id, boardEntry);
+                }
+
+                if (list is not null)
+                {
+                    if (!listDictionary.TryGetValue(list.Id, out var listEntry))
+                    {
+                        listEntry = list;
+                        listEntry.Cards = [];
+                        listDictionary.Add(listEntry.Id, listEntry);
+                        boardEntry.Lists.Add(listEntry);
+                    }
+
+                    if (card is not null)
+                    {
+                        if (!cardDictionary.TryGetValue(card.Id, out var cardEntry))
+                        {
+                            cardEntry = card;
+                            cardEntry.Attachments = [];
+                            cardEntry.Labels = [];
+                            cardDictionary.Add(cardEntry.Id, cardEntry);
+                            listEntry.Cards.Add(cardEntry);
+                        }
+
+                        if (attachment is not null && attachment.Id != Guid.Empty)
+                        {
+                            if (!cardEntry.Attachments.Any(x => x.Id == attachment.Id))
+                            {
+                                cardEntry.Attachments.Add(attachment);
+                            }
+                        }
+
+                        if (assignee is not null && assignee.UserId != Guid.Empty)
+                        {
+                            if (!cardEntry.Assignees.Any(x => x.UserId == assignee.UserId))
+                            {
+                                cardEntry.Assignees.Add(assignee);
+                            }
+                        }
+                    }
+                }
+
+                return boardEntry;
+            },
             new { BoardId = boardId },
-            _transaction);
+            splitOn: "Id,Id,Id,UserId");
+
+        var boardArchive = boardDictionary.Values.FirstOrDefault();
+
+        if (boardArchive is not null)
+        {
+            var members = await _connection.QueryAsync<BoardMemberDto>(
+                sqlBoardMembers, new { BoardId = boardId });
+            boardArchive.Members = members.ToList();
+
+            var cardLabelsData = await _connection.QueryAsync<dynamic>(
+                sqlCardLabels, new { BoardId = boardId });
+
+            var labelsByCard = cardLabelsData.GroupBy(row => (Guid)row.CardId);
+
+            foreach (var group in labelsByCard)
+            {
+                if (cardDictionary.TryGetValue(group.Key, out var cardEntry))
+                {
+                    cardEntry.Labels = group.Select(row => new LabelDto
+                    {
+                        Id = row.Id,
+                        Name = row.Name,
+                        Color = row.Color
+                    }).ToList();
+                }
+            }
+
+            var checklistItems = await _connection.QueryAsync<ChecklistItemDto>(
+                sqlChecklistItems, new { BoardId = boardId });
+
+            var checklistLookup = checklistItems
+                .GroupBy(x => x.CardId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            foreach (var card in boardArchive.Lists.SelectMany(l => l.Cards))
+            {
+                if (checklistLookup.TryGetValue(card.Id, out var items))
+                {
+                    card.ChecklistItems = items;
+                }
+            }
+        }
+
+        return boardArchive;
     }
 }

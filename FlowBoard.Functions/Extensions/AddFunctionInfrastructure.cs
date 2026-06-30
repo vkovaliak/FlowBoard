@@ -1,6 +1,5 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Infrastructure.Storage;
-using FlowBoard.Infrastructure.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using FlowBoard_Functions.Services;
 using FlowBoard.Persistence.Connection;
@@ -8,8 +7,10 @@ using FlowBoard.Persistence.UnitOfWork;
 using Microsoft.Extensions.Options;
 using FlowBoard.Infrastructure.Configurations;
 using Azure.Storage.Blobs;
+using Microsoft.Azure.Cosmos;
+using FlowBoard.Infrastructure.Tracking;
 
-namespace FlowBoard.Infrastructure.Functions;
+namespace FlowBoard_Functions.Extensions;
 
 public static class DependencyInjection
 {
@@ -17,6 +18,13 @@ public static class DependencyInjection
         this IServiceCollection services)
     {
         services.AddScoped<IFileStorageService, AzureBlobStorageService>();
+        services.AddScoped<IArchiveJobTracker, CosmosArchiveJobTracker>();
+
+        services.AddSingleton(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<CosmosOptions>>().Value;
+            return new CosmosClient(options.ConnectionString);
+        });
 
         services.AddSingleton(sp =>
         {

@@ -360,4 +360,24 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             new { BoardId = boardId, Status = (int)status },
             _transaction);
     }
+
+    public async Task<BoardArchiveDto?> GetForArchiveAsync(Guid boardId)
+    {
+        const string sql = """
+            SELECT 
+                Id, 
+                Name, 
+                IsPublic, 
+                CreatedBy, 
+                CreatedAt, 
+                ArchivedAt
+            FROM Boards
+            WHERE Id = @BoardId;
+            """;
+
+        return await _connection.QueryFirstOrDefaultAsync<BoardArchiveDto>(
+            sql,
+            new { BoardId = boardId },
+            _transaction);
+    }
 }

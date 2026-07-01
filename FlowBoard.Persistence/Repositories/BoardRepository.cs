@@ -49,7 +49,7 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
         return result > 0;
     }
 
-    public async Task<IEnumerable<BoardDto>> GetByUserIdAsync(Guid userId)
+    public async Task<IEnumerable<BoardDto>> GetByUserIdAsync(Guid userId, ArchiveStatus status)
     {
         const string sql = @"
             SELECT DISTINCT 
@@ -61,13 +61,14 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 ISNULL(bm.IsFavorite, 0) AS IsFavorite
             FROM Boards b
             LEFT JOIN BoardMembers bm ON b.Id = bm.BoardId AND bm.UserId = @UserId
-            WHERE b.CreatedBy = @UserId 
-               OR bm.UserId = @UserId
+            WHERE (b.CreatedBy = @UserId 
+                   OR bm.UserId = @UserId)
+                AND b.ArchiveStatus = @Status
             ORDER BY b.CreatedAt DESC";
 
         return await _connection.QueryAsync<BoardDto>(
             sql, 
-            new { UserId = userId });
+            new { UserId = userId, Status = (int)status });
     }
 
     public async Task<BoardDetailsDto?> GetDetailsAsync(Guid boardId, Guid userId)

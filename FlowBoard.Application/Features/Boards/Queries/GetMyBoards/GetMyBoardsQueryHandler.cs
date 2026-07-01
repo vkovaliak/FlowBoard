@@ -19,7 +19,7 @@ public class GetMyBoardsQueryHandler : IRequestHandler<GetMyBoardsQuery, Result<
     public async Task<Result<IEnumerable<BoardDto>>> Handle(GetMyBoardsQuery request, CancellationToken cancellationToken)
     {
         var currentUserId = _currentUserService.GetId();
-        var boards = await _boardRepository.GetByUserIdAsync(currentUserId);
+        var boards = await _boardRepository.GetByUserIdAsync(currentUserId, request.Status);
 
         return Result.Ok(boards);
     }

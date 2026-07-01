@@ -14,6 +14,7 @@ using FlowBoard.Application.Features.Boards.Commands.RemoveMember;
 using FlowBoard.Application.Features.Boards.Commands.LeaveBoard;
 using FlowBoard.Application.Features.Boards.Commands.ToggleFavorite;
 using FlowBoard.Application.Features.Boards.Commands.ArchiveBoard;
+using FlowBoard.Domain.Enums;
 
 namespace FlowBoard.WebApi.Controllers;
 
@@ -47,7 +48,21 @@ public class BoardsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetMyBoardsAsync()
     {
-        var query = new GetMyBoardsQuery();
+        var query = new GetMyBoardsQuery(ArchiveStatus.None);
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("archived")]
+    public async Task<IActionResult> GetArchivedBoardsAsync()
+    {
+        var query = new GetMyBoardsQuery(ArchiveStatus.Completed);
         var result = await _mediator.Send(query);
 
         if (result.IsFailed)

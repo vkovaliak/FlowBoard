@@ -23,6 +23,9 @@ builder.Services.AddSingleton<DatabaseInitializer>();
 builder.Services.Configure<AzureBlobOptions>(
     builder.Configuration.GetSection(AzureBlobOptions.SectionName));
 
+builder.Services.Configure<AzureAiOptions>(
+    builder.Configuration.GetSection(AzureAiOptions.SectionName));
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 builder.Services.AddPersistence();

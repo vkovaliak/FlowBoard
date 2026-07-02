@@ -2,35 +2,33 @@ using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.DTOs.AIChat;
 using FlowBoard.Infrastructure.Chat.Prompts;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 
 namespace FlowBoard.Infrastructure.Chat;
 
 public sealed class SemanticKernelChatService : IChatService
 {
-    private readonly IChatCompletionService _chatCompletion;
-    private readonly ISearchContextProvider _contextProvider;
+    private readonly Kernel _kernel;
 
-    public SemanticKernelChatService(
-        Kernel kernel,
-        ISearchContextProvider contextProvider)
+    public SemanticKernelChatService(Kernel kernel)
     {
-        _chatCompletion = kernel.GetRequiredService<IChatCompletionService>();
-        _contextProvider = contextProvider;
+        _kernel = kernel;
     }
 
     public async Task<ChatResponse> SendMessageAsync(string request)
     {
-        var context = await _contextProvider.GetContextAsync(request);
+        var settings = new AzureOpenAIPromptExecutionSettings
+        {
+            FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+        };
 
-        var chatHistory = new ChatHistory();
-        chatHistory.AddSystemMessage(ChatPrompts.BuildSystemPrompt(context));
-        chatHistory.AddUserMessage(request);
+        var response = await _kernel.InvokePromptAsync(
+            ChatPrompts.AssistantPrompt,
+            new KernelArguments(settings)
+            {
+                ["request"] = request
+            });
 
-        var response = await _chatCompletion.GetChatMessageContentAsync(
-            chatHistory);
-
-        return new ChatResponse(
-            Answer: response.Content ?? string.Empty);
+        return new ChatResponse(Answer: response.ToString());
     }
 }

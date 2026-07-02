@@ -2,6 +2,7 @@ using Azure.Storage.Blobs;
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Infrastructure.Auth;
 using FlowBoard.Infrastructure.Chat;
+using FlowBoard.Infrastructure.Chat.Plugins;
 using FlowBoard.Infrastructure.Configurations;
 using FlowBoard.Infrastructure.Jobs;
 using FlowBoard.Infrastructure.Messaging;
@@ -22,7 +23,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IExternalAuthService, ExternalAuthService>();
         services.AddScoped<IFileStorageService, AzureBlobStorageService>();
         services.AddScoped<IJwtProvider, JwtProvider>();
-        services.AddScoped<ISearchContextProvider, AzureSearchContextProvider>();
+
+        services.AddSingleton<IArchiveMessagePublisher, ServiceBusMessagePublisher>();
+        
+        services.AddSingleton<ISearchContextProvider, AzureSearchContextProvider>();
 
         services.AddSingleton(sp =>
         {
@@ -34,10 +38,13 @@ public static class ServiceCollectionExtensions
                 endpoint: opts.OpenAiEndpoint,
                 apiKey: opts.OpenAiApiKey);
 
-            return builder.Build();
-        });
+            var kernel = builder.Build();
 
-        services.AddSingleton<IArchiveMessagePublisher, ServiceBusMessagePublisher>();
+            var contextProvider = sp.GetRequiredService<ISearchContextProvider>();
+            kernel.Plugins.AddFromObject(new FaqSearchPlugin(contextProvider), "FaqSearch");
+
+            return kernel;
+        });
 
         services.AddSingleton(sp =>
         {

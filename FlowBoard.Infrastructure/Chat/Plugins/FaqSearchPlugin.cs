@@ -16,8 +16,7 @@ public sealed class FaqSearchPlugin
     [KernelFunction("search_faq")]
     [Description(
         "Searches the FlowBoard knowledge base (FAQ) for information about the product, " +
-        "such as boards, cards, lists, archiving, accounts and security. " +
-        "Use this ONLY when the user asks a question about FlowBoard features or usage.")]
+        "such as boards, cards, lists, archiving, accounts and security. ")]
     public async Task<string> SearchFaqAsync(
         [Description("The user's question to look up in the FAQ knowledge base.")]
         string query)

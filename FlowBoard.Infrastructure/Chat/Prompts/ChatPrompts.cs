@@ -17,7 +17,5 @@ internal static class ChatPrompts
 
         Never invent information about FlowBoard. If the search_faq function does not
         return enough information, say that you don't know.
-        
-        User: {{$request}}
         """;
 }

@@ -2,6 +2,7 @@ using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.DTOs.AIChat;
 using FlowBoard.Infrastructure.Chat.Prompts;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 
 namespace FlowBoard.Infrastructure.Chat;
@@ -22,12 +23,17 @@ public sealed class SemanticKernelChatService : IChatService
             FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
         };
 
-        var response = await _kernel.InvokePromptAsync(
-            ChatPrompts.AssistantPrompt,
-            new KernelArguments(settings)
-            {
-                ["request"] = request
-            });
+        var chatCompletion = _kernel.GetRequiredService<IChatCompletionService>();
+
+        var history = new ChatHistory();
+
+        history.AddSystemMessage(ChatPrompts.AssistantPrompt);
+        history.AddUserMessage(request);
+
+        var response = await chatCompletion.GetChatMessageContentAsync(
+            history,
+            settings,
+            _kernel);
 
         return new ChatResponse(Answer: response.ToString());
     }

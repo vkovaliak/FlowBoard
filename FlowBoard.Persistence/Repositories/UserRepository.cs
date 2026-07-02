@@ -41,4 +41,20 @@ public class UserRepository : BaseRepository<User, Guid>, IUserRepository
             new { Provider = provider, ExternalId = externalId },
             _transaction);
     }
+
+    public async Task<bool> UpdatePasswordAsync(Guid userId, string passwordHash)
+    {
+        const string sql = """
+            UPDATE Users
+            SET PasswordHash = @PasswordHash
+            WHERE Id = @UserId
+            """;
+
+        var result = await _connection.ExecuteAsync(
+            sql,
+            new { UserId = userId, PasswordHash = passwordHash },
+            _transaction);
+        
+         return result > 0;
+    }
 }

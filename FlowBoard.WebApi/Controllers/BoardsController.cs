@@ -15,6 +15,8 @@ using FlowBoard.Application.Features.Boards.Commands.LeaveBoard;
 using FlowBoard.Application.Features.Boards.Commands.ToggleFavorite;
 using FlowBoard.Application.Features.Boards.Commands.ArchiveBoard;
 using FlowBoard.Domain.Enums;
+using FlowBoard.Application.Features.Boards.Commands.TransferOwnership;
+using FlowBoard.Application.Features.Boards.Commands.ChangeMemberRole;
 
 namespace FlowBoard.WebApi.Controllers;
 
@@ -196,6 +198,45 @@ public class BoardsController : ControllerBase
         {
             return BadRequest(result.Errors.First().Message);
         }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("{boardId:guid}/transfer-ownership")]
+    public async Task<IActionResult> TransferOwnershipAsync(
+        Guid boardId, TransferOwnershipCommand command)
+    {
+        var updated = command with { BoardId = boardId };
+        
+        var result = await _mediator.Send(updated);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpPatch("{boardId:guid}/members/{userId:guid}/role")]
+    public async Task<IActionResult> ChangeMemberRoleAsync(
+        Guid boardId, Guid userId, ChangeMemberRoleCommand command)
+    {
+        var updated = command with { 
+            BoardId = boardId, UserId = userId };
+
+        var result = await _mediator.Send(updated);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
 
         return Ok(result.Value);
     }

@@ -1,6 +1,7 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.Constants;
 using FlowBoard.Domain.Entities;
+using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
@@ -27,9 +28,11 @@ public class UpdateBoardCommandHandler : IRequestHandler<UpdateBoardCommand, Res
             return Result.Fail(ErrorMessages.BoardNotFound);
         }
 
-        if (board.CreatedBy != currentUserId)
+        var role = await _boardRepository.GetUserRoleAsync(
+            board.Id, currentUserId);
+        if (role != BoardRole.Owner)
         {
-            return Result.Fail("You do not have permission to update this board.");
+            return Result.Fail("Only the board owner can update this board.");
         }
 
         board.Name = request.Name;

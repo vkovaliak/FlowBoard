@@ -569,4 +569,74 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             sql, new { BoardId = boardId }, 
             _transaction);
     }
+
+    public async Task<int> GetOwnerCountAsync(Guid boardId)
+    {
+        const string sql = """
+            SELECT COUNT(1) 
+            FROM BoardMembers
+            WHERE BoardId = @BoardId 
+            AND [Role] = @OwnerRole;
+            """;
+
+        return await _connection.QueryFirstOrDefaultAsync<int>(
+            sql,
+            new 
+            {  
+                BoardId = boardId, 
+                OwnerRole = (int)BoardRole.Owner 
+            },
+            _transaction);
+    }
+
+    public async Task<bool> UpdateMemberRoleAsync(
+        Guid boardId, Guid userId, BoardRole role)
+    {
+        const string sql = """
+            UPDATE BoardMembers
+            SET [Role] = @Role
+            WHERE BoardId = @BoardId 
+            AND UserId = @UserId;
+            """;
+
+        var affected = await _connection.ExecuteAsync(
+            sql,
+            new 
+            { 
+                BoardId = boardId, 
+                UserId = userId, 
+                Role = (int)role 
+            },
+            _transaction);
+
+        return affected > 0;
+    }
+
+    public async Task TransferOwnershipAsync(
+        Guid boardId, Guid currentOwnerId, Guid newOwnerId)
+    {
+        const string sql = """
+            UPDATE BoardMembers
+            SET [Role] = @AdminRole
+            WHERE BoardId = @BoardId 
+            AND UserId = @CurrentOwnerId;
+
+            UPDATE BoardMembers
+            SET [Role] = @OwnerRole
+            WHERE BoardId = @BoardId 
+            AND UserId = @NewOwnerId;
+            """;
+
+        await _connection.ExecuteAsync(
+            sql,
+            new
+            {
+                BoardId = boardId,
+                CurrentOwnerId = currentOwnerId,
+                NewOwnerId = newOwnerId,
+                AdminRole = (int)BoardRole.Admin,
+                OwnerRole = (int)BoardRole.Owner
+            },
+            _transaction);
+    }
 }

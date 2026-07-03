@@ -13,9 +13,11 @@ public interface IBoardRepository : IBaseRepository<Board, Guid>
     Task<BoardRole?> GetUserRoleAsync(Guid boardId, Guid userId);
     Task<bool> RemoveMemberAsync(Guid boardId, Guid userId);
     Task<bool> ToggleFavoriteAsync(Guid boardId, Guid userId);
-    Task<IEnumerable<BoardArchiveDto>> GetByArchiveStatusAsync(
-        ArchiveStatus status);
+    Task<IEnumerable<BoardArchiveDto>> GetByArchiveStatusAsync(ArchiveStatus status);
     Task UpdateArchiveStatusAsync(Guid boardId, ArchiveStatus status);
     Task<BoardArchiveDto?> GetForArchiveAsync(Guid boardId);
     Task DeleteBoardContentAsync(Guid boardId);
+    Task<int> GetOwnerCountAsync(Guid boardId);
+    Task<bool> UpdateMemberRoleAsync(Guid boardId, Guid userId, BoardRole role);
+    Task TransferOwnershipAsync(Guid boardId, Guid currentOwnerId, Guid newOwnerId);
 }

@@ -27,7 +27,7 @@ public class ToggleFavoriteCommandHandler
         using var uow = _uowFactory.Create();
         try
         {
-            var board = uow.BoardRepository.GetByIdAsync(command.BoardId);
+            var board = await uow.BoardRepository.GetByIdAsync(command.BoardId);
             if (board is null)
             {
                 return Result.Fail(ErrorMessages.BoardNotFound);

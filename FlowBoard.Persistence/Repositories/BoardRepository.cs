@@ -55,10 +55,12 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             SELECT DISTINCT 
                 b.Id, 
                 b.Name, 
-                b.IsPublic, 
+                b.IsPublic,
+                b.Background, 
                 b.CreatedBy, 
                 b.CreatedAt,
-                ISNULL(bm.IsFavorite, 0) AS IsFavorite
+                ISNULL(bm.IsFavorite, 0) AS IsFavorite,
+                ISNULL(bm.Role, 0) AS UserRole
             FROM Boards b
             LEFT JOIN BoardMembers bm ON b.Id = bm.BoardId AND bm.UserId = @UserId
             WHERE (b.CreatedBy = @UserId 
@@ -78,6 +80,7 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 b.Id,
                 b.Name,
                 b.IsPublic,
+                b.Background,
                 b.CreatedBy,
                 b.CreatedAt,
                 bm.IsFavorite,

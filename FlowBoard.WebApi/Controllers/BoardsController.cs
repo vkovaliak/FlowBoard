@@ -17,6 +17,7 @@ using FlowBoard.Application.Features.Boards.Commands.ArchiveBoard;
 using FlowBoard.Domain.Enums;
 using FlowBoard.Application.Features.Boards.Commands.TransferOwnership;
 using FlowBoard.Application.Features.Boards.Commands.ChangeMemberRole;
+using FlowBoard.Application.Features.Boards.Queries.GetBackgrounds;
 
 namespace FlowBoard.WebApi.Controllers;
 
@@ -28,14 +29,17 @@ public class BoardsController : ControllerBase
     private readonly IMediator _mediator;
     private readonly IHubContext<BoardHub> _hubContext;
 
-    public BoardsController(IMediator mediator, IHubContext<BoardHub> hubContext)
+    public BoardsController(
+        IMediator mediator, 
+        IHubContext<BoardHub> hubContext)
     {
         _mediator = mediator;
         _hubContext = hubContext;
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateAsync(CreateBoardCommand command)
+    public async Task<IActionResult> CreateAsync(
+        CreateBoardCommand command)
     {
         var result = await _mediator.Send(command);
 
@@ -90,7 +94,8 @@ public class BoardsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> UpdateAsync(Guid id, UpdateBoardCommand command)
+    public async Task<IActionResult> UpdateAsync(
+        Guid id, UpdateBoardCommand command)
     {
         var updatedCommand = command with { BoardId = id };
         var result = await _mediator.Send(updatedCommand);
@@ -124,7 +129,8 @@ public class BoardsController : ControllerBase
     }
 
     [HttpPost("{boardId:guid}/invite")]
-    public async Task<IActionResult> InviteMemberAsync(Guid boardId, InviteMemberCommand command)
+    public async Task<IActionResult> InviteMemberAsync(
+        Guid boardId, InviteMemberCommand command)
     {
         var updatedCommand = command with { BoardId = boardId };
         var result = await _mediator.Send(updatedCommand);
@@ -141,7 +147,8 @@ public class BoardsController : ControllerBase
     }
 
     [HttpDelete("{boardId:guid}/members/{userId:guid}")]
-    public async Task<IActionResult> RemoveMemberAsync(Guid boardId, Guid userId)
+    public async Task<IActionResult> RemoveMemberAsync(
+        Guid boardId, Guid userId)
     {
         var command = new RemoveMemberCommand(boardId, userId);
         var result = await _mediator.Send(command);
@@ -237,6 +244,19 @@ public class BoardsController : ControllerBase
 
         await _hubContext.Clients.Group(boardId.ToString())
             .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("backgrounds")]
+    public async Task<IActionResult> GetBackgroundsAsync()
+    {
+        var result = await _mediator.Send(new GetBackgroundsQuery());
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
 
         return Ok(result.Value);
     }

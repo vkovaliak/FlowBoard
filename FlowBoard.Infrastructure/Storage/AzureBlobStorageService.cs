@@ -33,6 +33,27 @@ public class AzureBlobStorageService : IFileStorageService
         return blobClient.Uri.ToString();
     }
 
+    public async Task<IReadOnlyList<string>> ListBlobUrlsAsync(
+        string containerName)
+    {
+        var containerClient = _blobServiceClient.GetBlobContainerClient(
+            containerName);
+
+        if (!await containerClient.ExistsAsync())
+        {
+            return [];
+        }
+
+        var urls = new List<string>();
+        await foreach (var blob in containerClient.GetBlobsAsync())
+        {
+            var blobClient = containerClient.GetBlobClient(blob.Name);
+            urls.Add(blobClient.Uri.ToString());
+        }
+
+        return urls.OrderBy(u => u).ToList();
+    }
+
     public async Task DeleteAsync(string fileUrl)
     {
         if (string.IsNullOrWhiteSpace(fileUrl)) return;

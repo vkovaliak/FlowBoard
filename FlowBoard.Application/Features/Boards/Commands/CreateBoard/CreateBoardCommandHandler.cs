@@ -26,6 +26,7 @@ public class CreateBoardCommandHandler : IRequestHandler<CreateBoardCommand, Res
             Id = Guid.NewGuid(),
             Name = command.Name,
             IsPublic = command.IsPublic,
+            Background = command.Background,
             CreatedBy = currentUserId
         };
 

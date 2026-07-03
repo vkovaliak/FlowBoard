@@ -1,18 +1,19 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Authorization;
 using FlowBoard.Domain.Constants;
 using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
-namespace FlowBoard.Application.Features.Boards.Commands.LeaveBoard;
+namespace FlowBoard.Application.Features.Boards.Commands.TransferOwnership;
 
-public class LeaveBoardCommandHandler
-    : IRequestHandler<LeaveBoardCommand, Result<bool>>
+public class TransferOwnershipCommandHandler
+    : IRequestHandler<TransferOwnershipCommand, Result<bool>>
 {
     private readonly IUnitOfWorkFactory _uowFactory;
     private readonly ICurrentUserService _currentUserService;
 
-    public LeaveBoardCommandHandler(
+    public TransferOwnershipCommandHandler(
         IUnitOfWorkFactory uowFactory,
         ICurrentUserService currentUserService)
     {
@@ -21,9 +22,15 @@ public class LeaveBoardCommandHandler
     }
 
     public async Task<Result<bool>> Handle(
-        LeaveBoardCommand request, CancellationToken cancellationToken)
+        TransferOwnershipCommand request, CancellationToken cancellationToken)
     {
         var currentUserId = _currentUserService.GetId();
+
+        if (request.NewOwnerId == currentUserId)
+        {
+            return Result.Fail("You are already the owner of this board.");
+        }
+
         using var uow = _uowFactory.Create();
         try
         {
@@ -33,27 +40,26 @@ public class LeaveBoardCommandHandler
                 return Result.Fail(ErrorMessages.BoardNotFound);
             }
 
-            var currentUserRole = await uow.BoardRepository.GetUserRoleAsync(
+            var currentRole = await uow.BoardRepository.GetUserRoleAsync(
                 board.Id, currentUserId);
 
-            if (currentUserRole is null)
+            if (currentRole is null
+                || !BoardPermissions.CanTransferOwnership(currentRole.Value))
             {
-                return Result.Fail("You are not a member of this board.");
+                return Result.Fail("Only the owner can transfer ownership.");
             }
 
-            if (currentUserRole == BoardRole.Owner)
+            var targetRole = await uow.BoardRepository.GetUserRoleAsync(
+                board.Id, request.NewOwnerId);
+
+            if (targetRole is null)
             {
                 return Result.Fail(
-                    "The owner cannot leave the board." +
-                    "Transfer ownership to another member first, or delete the board.");
+                    "The selected user is not a member of this board.");
             }
 
-            var removed = await uow.BoardRepository.RemoveMemberAsync(
-                board.Id, currentUserId);
-            if (!removed)
-            {
-                return Result.Fail("Failed to leave the board.");
-            }
+            await uow.BoardRepository.TransferOwnershipAsync(
+                board.Id, currentUserId, request.NewOwnerId);
 
             uow.Commit();
             return Result.Ok(true);

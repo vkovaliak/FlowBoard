@@ -1,4 +1,5 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Authorization;
 using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
@@ -14,7 +15,8 @@ public class BoardAuthorizationBehavior<TRequest, TResponse>
     private readonly ICurrentUserService _currentUserService;
 
     public BoardAuthorizationBehavior(
-        IBoardRepository boardRepository, ICurrentUserService currentUserService)
+        IBoardRepository boardRepository, 
+        ICurrentUserService currentUserService)
     {
         _boardRepository = boardRepository;
         _currentUserService = currentUserService;
@@ -30,22 +32,23 @@ public class BoardAuthorizationBehavior<TRequest, TResponse>
             return await next();
         }
 
-        var boardIdProp = typeof(TRequest).GetProperty("BoardId");
-
         var commandName = typeof(TRequest).Name;
-        if (commandName == "LeaveBoardCommand" 
-            || commandName == "ToggleFavoriteCommand")
+
+        if (commandName is "LeaveBoardCommand"
+            or "ToggleFavoriteCommand")
         {
             return await next();
         }
-        
+
+        var boardIdProp = typeof(TRequest).GetProperty("BoardId");
+
         if (boardIdProp?.GetValue(request) is Guid boardId)
         {
             var currentUserId = _currentUserService.GetId();
             var userRole = await _boardRepository.GetUserRoleAsync(
                 boardId, currentUserId);
 
-            if (userRole is null || userRole == BoardRole.Viewer)
+            if (userRole is null || !BoardPermissions.CanModifyContent(userRole.Value))
             {
                 var result = new TResponse();
                 result.Reasons.Add(

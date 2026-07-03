@@ -1,6 +1,6 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Authorization;
 using FlowBoard.Domain.Constants;
-using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
@@ -33,9 +33,16 @@ public class InviteMemberCommandHandler : IRequestHandler<InviteMemberCommand, R
 
             var currentUserRole = await uow.BoardRepository.GetUserRoleAsync(
                 board.Id, currentUserId);
-            if (currentUserRole != BoardRole.Owner)
+
+            if (currentUserRole is null
+                || !BoardPermissions.CanInviteMembers(currentUserRole.Value))
             {
-                return Result.Fail("Only the board owner can invite new members.");
+                return Result.Fail("You do not have permission to invite members.");
+            }
+
+            if (!BoardPermissions.CanAssignRole(currentUserRole.Value, request.Role))
+            {
+                return Result.Fail("You cannot invite a member with this role.");
             }
 
             var userToInvite = await uow.UserRepository.GetByEmailAsync(

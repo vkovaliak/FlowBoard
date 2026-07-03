@@ -1,4 +1,6 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Application.Features.Boards.Commands.LeaveBoard;
+using FlowBoard.Application.Features.Boards.Commands.ToggleFavorite;
 using FlowBoard.Domain.Authorization;
 using FlowBoard.Domain.Enums;
 using FluentResults;
@@ -34,8 +36,8 @@ public class BoardAuthorizationBehavior<TRequest, TResponse>
 
         var commandName = typeof(TRequest).Name;
 
-        if (commandName is "LeaveBoardCommand"
-            or "ToggleFavoriteCommand")
+        if (commandName is nameof(LeaveBoardCommand)
+            or nameof(ToggleFavoriteCommand))
         {
             return await next();
         }

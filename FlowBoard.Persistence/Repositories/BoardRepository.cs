@@ -683,4 +683,36 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             },
             _transaction);
     }
+
+    public async Task<int> GetOwnedBoardsCountAsync(Guid userId)
+    {
+        const string sql = """
+            SELECT COUNT(1)
+            FROM Boards
+            WHERE CreatedBy = @UserId
+            AND ArchiveStatus = @Active;
+            """;
+
+        return await _connection.QueryFirstOrDefaultAsync<int>(
+            sql,
+            new { 
+                UserId = userId, 
+                Active = (int)ArchiveStatus.None 
+            },
+            _transaction);
+    }
+
+    public async Task<int> GetMembersCountAsync(Guid boardId)
+    {
+        const string sql = """
+            SELECT COUNT(1)
+            FROM BoardMembers
+            WHERE BoardId = @BoardId;
+            """;
+
+        return await _connection.QueryFirstOrDefaultAsync<int>(
+            sql,
+            new { BoardId = boardId },
+            _transaction);
+    }
 }

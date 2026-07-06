@@ -57,4 +57,17 @@ public class UserRepository : BaseRepository<User, Guid>, IUserRepository
         
          return result > 0;
     }
+
+    public async Task<User?> GetByStripeCustomerIdAsync(string customerId)
+    {
+        const string sql = """
+            SELECT * FROM Users
+            WHERE StripeCustomerId = @CustomerId;
+            """;
+
+        return await _connection.QueryFirstOrDefaultAsync<User>(
+            sql,
+            new { CustomerId = customerId },
+            _transaction);
+    }
 }

@@ -7,46 +7,60 @@ using MediatR;
 
 namespace FlowBoard.Application.Features.Boards.Commands.UpdateBoard;
 
-public class UpdateBoardCommandHandler : IRequestHandler<UpdateBoardCommand, Result<Guid>>
+public class UpdateBoardCommandHandler 
+    : IRequestHandler<UpdateBoardCommand, Result<Guid>>
 {
-    private readonly IBoardRepository _boardRepository;
+    private readonly IUnitOfWorkFactory _uowFactory;
     private readonly ICurrentUserService _currentUserService;
 
 
-    public UpdateBoardCommandHandler(IBoardRepository boardRepository, ICurrentUserService currentUserService)
+    public UpdateBoardCommandHandler(
+        IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService)
     {
-        _boardRepository = boardRepository;
+        _uowFactory = uowFactory;
         _currentUserService = currentUserService;
     }
 
-    public async Task<Result<Guid>> Handle(UpdateBoardCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(
+        UpdateBoardCommand command, CancellationToken cancellationToken)
     {
         var currentUserId = _currentUserService.GetId();
-        var board = await _boardRepository.GetByIdAsync(request.BoardId);
-        if (board == null)
-        {
-            return Result.Fail(ErrorMessages.BoardNotFound);
-        }
 
-        var role = await _boardRepository.GetUserRoleAsync(
-            board.Id, currentUserId);
-        if (role != BoardRole.Owner)
+        using var uow = _uowFactory.Create();
+        try
         {
-            return Result.Fail("Only the board owner can update this board.");
+            var board = await uow.BoardRepository.GetByIdAsync(command.BoardId);
+            if (board is null)
+            {
+                return Result.Fail(ErrorMessages.BoardNotFound);
+            }
+
+            var owner = await uow.UserRepository.GetByIdAsync(board.CreatedBy);
+            if (owner is null)
+            {
+                return Result.Fail("Owner not found");
+            }
+
+            board.Name = command.Name;
+            board.IsPublic = command.IsPublic;
+
+            board.Background = owner.SubscriptionPlan == SubscriptionPlan.Pro
+                ? command.Background
+                : null;
+
+            var result = await uow.BoardRepository.UpdateAsync(board);
+            if (!result)
+            {
+                return Result.Fail("Failed to update the board in the database.");
+            }
+
+            uow.Commit();
+            return Result.Ok(board.Id);
         }
-
-        board.Name = request.Name;
-        board.IsPublic = request.IsPublic;
-        board.Background = request.Background;
-        board.UpdatedAt = DateTime.UtcNow;
-        board.UpdatedBy = currentUserId;
-
-        var result =  await _boardRepository.UpdateAsync(board);
-        if (!result)
+        catch
         {
-            return Result.Fail("Failed to update the board in the database.");
+            uow.Rollback();
+            throw;
         }
-        
-        return Result.Ok(board.Id);
     }
 }

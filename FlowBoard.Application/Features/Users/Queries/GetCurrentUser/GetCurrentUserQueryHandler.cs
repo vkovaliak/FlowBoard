@@ -34,7 +34,8 @@ public class GetCurrentUserQueryHandler
             user.Id,
             user.EmailAddress,
             user.UserName,
-            user.AvatarUrl);
+            user.AvatarUrl,
+            user.SubscriptionPlan);
 
         return Result.Ok(dto);
     }

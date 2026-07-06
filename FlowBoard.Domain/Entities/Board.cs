@@ -21,5 +21,8 @@ public class Board : BaseEntity<Guid>
     public Guid? UpdatedBy { get; set; }
 
     public ArchiveStatus ArchiveStatus { get; set; } = ArchiveStatus.None;
+    
     public DateTime? ArchivedAt { get; set; }
+
+    public string? Background { get; set; }
 }

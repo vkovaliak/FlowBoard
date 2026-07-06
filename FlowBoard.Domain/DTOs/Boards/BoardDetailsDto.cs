@@ -12,6 +12,8 @@ public class BoardDetailsDto
 
     public bool IsPublic { get; set; }
 
+    public string? Background { get; set; }
+
     public Guid CreatedBy { get; set; }
     
     public DateTime CreatedAt { get; set; }

@@ -1,0 +1,2 @@
+ALTER TABLE [Boards]
+ADD [Background] NVARCHAR(2048) NULL;

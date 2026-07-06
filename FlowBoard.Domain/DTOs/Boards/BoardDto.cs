@@ -10,4 +10,7 @@ public record BoardDto(
     Guid CreatedBy,
     DateTime CreatedAt,
     bool IsFavorite,
-    BoardRole UserRole);
+    BoardRole UserRole)
+{
+    public List<BoardMemberAvatarDto> Members { get; set; } = [];
+};

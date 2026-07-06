@@ -20,4 +20,6 @@ public interface IBoardRepository : IBaseRepository<Board, Guid>
     Task<int> GetOwnerCountAsync(Guid boardId);
     Task<bool> UpdateMemberRoleAsync(Guid boardId, Guid userId, BoardRole role);
     Task TransferOwnershipAsync(Guid boardId, Guid currentOwnerId, Guid newOwnerId);
+    Task<int> GetOwnedBoardsCountAsync(Guid userId);
+    Task<int> GetMembersCountAsync(Guid boardId);
 }

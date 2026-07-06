@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using FlowBoard.Domain.Enums;
 
 namespace FlowBoard.Domain.Entities;
 
@@ -20,4 +21,10 @@ public class User : BaseEntity<Guid>
     public string? ExternalProvider { get; set; }
 
     public string? ExternalId { get; set; }
+
+    public SubscriptionPlan SubscriptionPlan { get; set; } = SubscriptionPlan.None;
+
+    public string? StripeCustomerId { get; set; }
+    
+    public string? StripeSubscriptionId { get; set; }
 }

@@ -6,6 +6,7 @@ using FlowBoard.Infrastructure.Chat.Plugins;
 using FlowBoard.Infrastructure.Configurations;
 using FlowBoard.Infrastructure.Jobs;
 using FlowBoard.Infrastructure.Messaging;
+using FlowBoard.Infrastructure.Payments;
 using FlowBoard.Infrastructure.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -23,6 +24,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IExternalAuthService, ExternalAuthService>();
         services.AddScoped<IFileStorageService, AzureBlobStorageService>();
         services.AddScoped<IJwtProvider, JwtProvider>();
+        services.AddScoped<IPaymentService, StripePaymentService>();
+
 
         services.AddSingleton<IArchiveMessagePublisher, ServiceBusMessagePublisher>();
         

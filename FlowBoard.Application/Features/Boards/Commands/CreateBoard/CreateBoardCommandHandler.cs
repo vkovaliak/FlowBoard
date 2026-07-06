@@ -1,4 +1,5 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.Authorization;
 using FlowBoard.Domain.Constants;
 using FlowBoard.Domain.Entities;
 using FlowBoard.Domain.Enums;
@@ -18,21 +19,44 @@ public class CreateBoardCommandHandler : IRequestHandler<CreateBoardCommand, Res
         _currentUserService = currentUserService;
     }
 
-    public async Task<Result<Guid>> Handle(CreateBoardCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(
+        CreateBoardCommand command, CancellationToken cancellationToken)
     {
         var currentUserId = _currentUserService.GetId();
-        var board = new Board
-        {
-            Id = Guid.NewGuid(),
-            Name = command.Name,
-            IsPublic = command.IsPublic,
-            Background = command.Background,
-            CreatedBy = currentUserId
-        };
 
         using var uow = _uowFactory.Create();
         try
         {
+            var user = await uow.UserRepository.GetByIdAsync(currentUserId);
+            if (user is null)
+            {
+                return Result.Fail("User is not found");
+            }
+
+            var ownedCount = await uow.BoardRepository.GetOwnedBoardsCountAsync(
+                currentUserId);
+
+            var maxBoards = PlanPermissions.MaxBoards(user.SubscriptionPlan);
+
+            if (ownedCount >= maxBoards)
+            {
+                return Result.Fail(
+                    $"Free plan allows only {maxBoards} boards. Upgrade to Pro for unlimited boards.");
+            }
+
+            var background = user.SubscriptionPlan == SubscriptionPlan.Pro
+                ? command.Background
+                : null;
+
+            var board = new Board
+            {
+                Id = Guid.NewGuid(),
+                Name = command.Name,
+                IsPublic = command.IsPublic,
+                Background = background,
+                CreatedBy = currentUserId
+            };
+
             await uow.BoardRepository.CreateAsync(board);
 
             await uow.BoardRepository.AddMemberAsync(

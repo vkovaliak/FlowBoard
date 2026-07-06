@@ -25,10 +25,19 @@ public class InviteMemberCommandHandler : IRequestHandler<InviteMemberCommand, R
         using var uow = _uowFactory.Create();
         try
         {
-            var board = await uow.BoardRepository.GetByIdAsync(request.BoardId);
+
+            var board = await uow.BoardRepository.GetByIdAsync(
+                request.BoardId);
             if (board is null)
             {
                 return Result.Fail(ErrorMessages.BoardNotFound);
+            }
+
+            var owner = await uow.UserRepository.GetByIdAsync(
+                board.CreatedBy);
+            if (owner is null)
+            {
+                return Result.Fail("User is not found");
             }
 
             var currentUserRole = await uow.BoardRepository.GetUserRoleAsync(
@@ -56,6 +65,17 @@ public class InviteMemberCommandHandler : IRequestHandler<InviteMemberCommand, R
             if (isAlreadyMember)
             {
                 return Result.Fail("This user is already a member of this board.");
+            }
+
+            var currentMembers = await uow.BoardRepository.GetMembersCountAsync(
+                board.Id);
+
+            var maxMembers = PlanPermissions.MaxMembers(owner.SubscriptionPlan);
+
+            if (currentMembers >= maxMembers)
+            {
+                return Result.Fail(
+                    $"Free plan allows only {maxMembers} members per board. Upgrade to Pro.");
             }
 
             await uow.BoardRepository.AddMemberAsync(

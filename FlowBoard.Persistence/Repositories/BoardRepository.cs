@@ -51,7 +51,7 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
 
     public async Task<IEnumerable<BoardDto>> GetByUserIdAsync(Guid userId, ArchiveStatus status)
     {
-        const string sql = @"
+        const string sqlBoards = """
             SELECT DISTINCT 
                 b.Id, 
                 b.Name, 
@@ -64,13 +64,54 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             FROM Boards b
             LEFT JOIN BoardMembers bm ON b.Id = bm.BoardId AND bm.UserId = @UserId
             WHERE (b.CreatedBy = @UserId 
-                   OR bm.UserId = @UserId)
+                OR bm.UserId = @UserId)
                 AND b.ArchiveStatus = @Status
-            ORDER BY b.CreatedAt DESC";
+            ORDER BY b.CreatedAt DESC
+            """;
 
-        return await _connection.QueryAsync<BoardDto>(
-            sql, 
-            new { UserId = userId, Status = (int)status });
+        var boards = (await _connection.QueryAsync<BoardDto>(
+            sqlBoards,
+            new { UserId = userId, Status = (int)status }))
+            .ToList();
+
+        if (boards.Count == 0)
+        {
+            return boards;
+        }
+
+        var boardIds = boards.Select(b => b.Id).ToArray();
+
+        const string sqlMembers = @"
+            SELECT 
+                bm.BoardId,
+                bm.UserId,
+                u.UserName,
+                u.AvatarUrl
+            FROM BoardMembers bm
+            JOIN Users u ON u.Id = bm.UserId
+            WHERE bm.BoardId IN @BoardIds";
+
+        var membersRaw = await _connection.QueryAsync<(
+            Guid BoardId, Guid UserId, string UserName, string? AvatarUrl)>(
+            sqlMembers,
+            new { BoardIds = boardIds });
+
+        var membersByBoard = membersRaw
+            .GroupBy(m => m.BoardId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(m => new BoardMemberAvatarDto(
+                     m.UserId, m.UserName, m.AvatarUrl)).ToList());
+
+        foreach (var board in boards)
+        {
+            if (membersByBoard.TryGetValue(board.Id, out var members))
+            {
+                board.Members = members;
+            }
+        }
+
+        return boards;
     }
 
     public async Task<BoardDetailsDto?> GetDetailsAsync(Guid boardId, Guid userId)

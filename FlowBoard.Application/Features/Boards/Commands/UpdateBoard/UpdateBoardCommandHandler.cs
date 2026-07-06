@@ -37,6 +37,7 @@ public class UpdateBoardCommandHandler : IRequestHandler<UpdateBoardCommand, Res
 
         board.Name = request.Name;
         board.IsPublic = request.IsPublic;
+        board.Background = request.Background;
         board.UpdatedAt = DateTime.UtcNow;
         board.UpdatedBy = currentUserId;
 

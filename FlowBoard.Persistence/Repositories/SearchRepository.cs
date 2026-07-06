@@ -75,4 +75,33 @@ public class SearchRepository : ISearchRepository
 
         return result.ToList();
     }
+
+    public async Task<List<UserSearchDto>> SearchUsersAsync(
+        Guid currentUserId, string query, int limit)
+    {
+        const string sql = """
+            SELECT TOP (@Limit)
+                u.Id,
+                u.EmailAddress,
+                u.UserName,
+                u.AvatarUrl
+            FROM Users u
+            WHERE (u.EmailAddress LIKE @Pattern OR u.UserName LIKE @Pattern)
+            AND u.Id <> @CurrentUserId
+            ORDER BY u.EmailAddress;
+            """;
+
+        var command = new CommandDefinition(
+            sql,
+            new
+            {
+                CurrentUserId = currentUserId,
+                Pattern = $"%{query}%",
+                Limit = limit
+            });
+
+        var result = await _connection.QueryAsync<UserSearchDto>(command);
+
+        return result.ToList();
+    }
 }

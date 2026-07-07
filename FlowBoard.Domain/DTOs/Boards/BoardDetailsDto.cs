@@ -21,6 +21,8 @@ public class BoardDetailsDto
     public bool IsFavorite { get; set; }
 
     public BoardRole? UserRole { get; set; }
+
+    public bool OwnerIsPro { get; set; }
     
     public List<ListDto> Lists { get; set; } = [];
 

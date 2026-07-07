@@ -6,5 +6,5 @@ public static class HangfireConstants
 
     public const string ArchiveBoardsJobId = "archive-boards-job";
 
-    public const string ArchiveBoardsJobCron = "*/2 * * * *";
+    public const string ArchiveBoardsJobCron = "*/30 * * * *";
 }

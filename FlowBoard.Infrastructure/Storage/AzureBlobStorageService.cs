@@ -68,6 +68,28 @@ public class AzureBlobStorageService : IFileStorageService
         await blobClient.DeleteIfExistsAsync();
     }
 
+    public async Task<string?> DownloadAsync(
+        Guid boardId, string containerName)
+    {
+        var containerClient = _blobServiceClient.GetBlobContainerClient(
+            containerName);
+
+        if (!await containerClient.ExistsAsync())
+            return null;
+
+        await foreach (var blob in containerClient.GetBlobsAsync())
+        {
+            if (blob.Name.EndsWith($"{boardId}.json"))
+            {
+                var blobClient = containerClient.GetBlobClient(blob.Name);
+                var content = await blobClient.DownloadContentAsync();
+                return content.Value.Content.ToString();
+            }
+        }
+
+        return null;
+    }
+
     private string GetContentType(string fileName)
     {
         var extension = Path.GetExtension(fileName).ToLowerInvariant();

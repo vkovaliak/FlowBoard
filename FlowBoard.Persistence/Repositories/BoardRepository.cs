@@ -1,6 +1,7 @@
 using System.Data;
 using Dapper;
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Domain.DTOs.Archive;
 using FlowBoard.Domain.DTOs.Attachments;
 using FlowBoard.Domain.DTOs.Boards;
 using FlowBoard.Domain.DTOs.CardAssignee;
@@ -201,6 +202,13 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             ORDER BY ci.Position;
             """;
 
+        const string sqlOwnerPlan = """
+            SELECT u.SubscriptionPlan
+            FROM Boards b
+            JOIN Users u ON u.Id = b.CreatedBy
+            WHERE b.Id = @BoardId;
+            """;
+
         var boardDictionary = new Dictionary<Guid, BoardDetailsDto>();
         var listDictionary = new Dictionary<Guid, ListDto>();
         var cardDictionary = new Dictionary<Guid, CardDto>();
@@ -273,6 +281,15 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
         var boardDetails = boardDictionary.Values.FirstOrDefault();
         if (boardDetails is not null)
         {
+            var ownerPlan = await _connection.QueryFirstOrDefaultAsync<int?>(
+                sqlOwnerPlan,
+                new { BoardId = boardId });
+            
+            boardDetails.OwnerIsPro =
+                ownerPlan.HasValue
+                && ownerPlan.Value == (int)SubscriptionPlan.Pro;
+
+
             var members = await _connection.QueryAsync<BoardMemberDto>(
                 sqlBoardMembers,
                 new { BoardId = boardId });
@@ -421,6 +438,7 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 l.BoardId,
                 l.Name,
                 l.Position,
+                l.CreatedBy,
 
                 c.Id,
                 c.ListId,
@@ -429,22 +447,22 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 c.Position,
                 c.DueDate,
                 c.IsCompleted,
+                c.CreatedBy,
 
                 a.Id,
                 a.FileName,
                 a.BlobUrl,
+                a.ContentType,
+                a.UploadedAt,
+                a.UploadetBy AS UploadetBy,
 
-                u.Id AS UserId,
-                u.EmailAddress,
-                u.UserName,
-                u.AvatarUrl
+                ca.UserId
 
             FROM Boards b
             LEFT JOIN Lists l ON l.BoardId = b.Id
             LEFT JOIN Cards c ON c.ListId = l.Id
             LEFT JOIN CardAttachments a ON a.CardId = c.Id
             LEFT JOIN CardAssignees ca ON ca.CardId = c.Id
-            LEFT JOIN Users u ON u.Id = ca.UserId
 
             WHERE b.Id = @BoardId
 
@@ -452,14 +470,8 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             """;
 
         const string sqlBoardMembers = """
-            SELECT 
-                bm.UserId,
-                u.EmailAddress,
-                bm.[Role],
-                u.UserName,
-                u.AvatarUrl
+            SELECT bm.UserId, bm.[Role]
             FROM BoardMembers bm
-            JOIN Users u ON bm.UserId = u.Id
             WHERE bm.BoardId = @BoardId;
             """;
 
@@ -468,7 +480,8 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 cl.CardId,
                 l.Id,
                 l.Name,
-                l.Color
+                l.Color,
+                l.CreatedBy
             FROM CardLabels cl
             JOIN Labels l ON l.Id = cl.LabelId
             JOIN Cards c ON c.Id = cl.CardId
@@ -482,7 +495,8 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 ci.CardId,
                 ci.Text,
                 ci.IsCompleted,
-                ci.Position
+                ci.Position,
+                ci.CreatedBy
             FROM ChecklistItems ci
             JOIN Cards c ON c.Id = ci.CardId
             JOIN Lists li ON li.Id = c.ListId
@@ -490,16 +504,30 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             ORDER BY ci.Position;
             """;
 
+        const string sqlComments = """
+            SELECT 
+                cm.Id, 
+                cm.CardId, 
+                cm.Message, 
+                cm.CreatedAt, 
+                cm.CreatedBy
+            FROM Comments cm
+            JOIN Cards c ON c.Id = cm.CardId
+            JOIN Lists li ON li.Id = c.ListId
+            WHERE li.BoardId = @BoardId
+            ORDER BY cm.CreatedAt;
+            """;
+
         var boardDictionary = new Dictionary<Guid, BoardArchiveDto>();
-        var listDictionary = new Dictionary<Guid, ListDto>();
-        var cardDictionary = new Dictionary<Guid, CardDto>();
+        var listDictionary = new Dictionary<Guid, ArchiveListDto>();
+        var cardDictionary = new Dictionary<Guid, ArchiveCardDto>();
 
         await _connection.QueryAsync<
             BoardArchiveDto,
-            ListDto,
-            CardDto,
-            AttachmentResponseDto,
-            CardAssigneeDto,
+            ArchiveListDto,
+            ArchiveCardDto,
+            ArchiveAttachmentDto,
+            ArchiveAssigneeDto,
             BoardArchiveDto>(
             sqlBoardDetails,
             (board, list, card, attachment, assignee) =>
@@ -507,8 +535,6 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 if (!boardDictionary.TryGetValue(board.Id, out var boardEntry))
                 {
                     boardEntry = board;
-                    boardEntry.Lists = [];
-                    boardEntry.Members = [];
                     boardDictionary.Add(boardEntry.Id, boardEntry);
                 }
 
@@ -517,7 +543,6 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                     if (!listDictionary.TryGetValue(list.Id, out var listEntry))
                     {
                         listEntry = list;
-                        listEntry.Cards = [];
                         listDictionary.Add(listEntry.Id, listEntry);
                         boardEntry.Lists.Add(listEntry);
                     }
@@ -527,8 +552,6 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                         if (!cardDictionary.TryGetValue(card.Id, out var cardEntry))
                         {
                             cardEntry = card;
-                            cardEntry.Attachments = [];
-                            cardEntry.Labels = [];
                             cardDictionary.Add(cardEntry.Id, cardEntry);
                             listEntry.Cards.Add(cardEntry);
                         }
@@ -558,43 +581,56 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
 
         var boardArchive = boardDictionary.Values.FirstOrDefault();
 
-        if (boardArchive is not null)
+        if (boardArchive is null)
         {
-            var members = await _connection.QueryAsync<BoardMemberDto>(
-                sqlBoardMembers, new { BoardId = boardId });
-            boardArchive.Members = members.ToList();
+            return null;
+        }
 
-            var cardLabelsData = await _connection.QueryAsync<dynamic>(
-                sqlCardLabels, new { BoardId = boardId });
+        var members = await _connection.QueryAsync<ArchiveMemberDto>(
+            sqlBoardMembers, new { BoardId = boardId });
 
-            var labelsByCard = cardLabelsData.GroupBy(row => (Guid)row.CardId);
+        boardArchive.Members = members.ToList();
 
-            foreach (var group in labelsByCard)
+        var cardLabelsData = await _connection.QueryAsync<dynamic>(
+            sqlCardLabels, new { BoardId = boardId });
+
+        foreach (var group in cardLabelsData.GroupBy(
+            row => (Guid)row.CardId))
+        {
+            if (cardDictionary.TryGetValue(group.Key, out var cardEntry))
             {
-                if (cardDictionary.TryGetValue(group.Key, out var cardEntry))
+                cardEntry.Labels = group.Select(
+                    row => new ArchiveLabelDto
                 {
-                    cardEntry.Labels = group.Select(row => new LabelDto
-                    {
-                        Id = row.Id,
-                        Name = row.Name,
-                        Color = row.Color
-                    }).ToList();
-                }
+                    Id = row.Id,
+                    Name = row.Name,
+                    Color = row.Color,
+                    CreatedBy = row.CreatedBy
+                }).ToList();
             }
+        }
 
-            var checklistItems = await _connection.QueryAsync<ChecklistItemDto>(
-                sqlChecklistItems, new { BoardId = boardId });
+        var checklistItems = await _connection.QueryAsync<ArchiveChecklistItemDto>(
+            sqlChecklistItems, new { BoardId = boardId });
 
-            var checklistLookup = checklistItems
-                .GroupBy(x => x.CardId)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            foreach (var card in boardArchive.Lists.SelectMany(l => l.Cards))
+        foreach (var group in checklistItems.GroupBy(x => x.CardId))
+        {
+            if (cardDictionary.TryGetValue(group.Key, out var cardEntry))
             {
-                if (checklistLookup.TryGetValue(card.Id, out var items))
-                {
-                    card.ChecklistItems = items;
-                }
+                cardEntry.ChecklistItems = group.ToList();
+            }
+        }
+
+
+        var comments = (await _connection.QueryAsync<ArchiveCommentDto>(
+            sqlComments, new { BoardId = boardId })).ToList();
+
+        foreach (var group in comments.GroupBy(x => x.CardId))
+        {
+            if (cardDictionary.TryGetValue(
+                group.Key, out var cardEntry))
+            {
+                cardEntry.Comments = group.ToList();
             }
         }
 
@@ -714,5 +750,200 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             sql,
             new { BoardId = boardId },
             _transaction);
+    }
+
+    public async Task RestoreBoardContentAsync(BoardArchiveDto board)
+    {
+        if (board.Members.Count > 0)
+        {
+            const string sqlMembers = """
+                INSERT INTO BoardMembers 
+                    (BoardId, UserId, Role, IsFavorite)
+                VALUES 
+                    (@BoardId, @UserId, @Role, 0);
+                """;
+
+            foreach (var member in board.Members)
+            {
+                await _connection.ExecuteAsync(
+                    sqlMembers,
+                    new { BoardId = board.Id, member.UserId, Role = (int)member.Role },
+                    _transaction);
+            }
+        }
+
+        var allLabels = board.Lists
+            .SelectMany(l => l.Cards)
+            .SelectMany(c => c.Labels)
+            .GroupBy(x => x.Id)
+            .Select(g => g.First())
+            .ToList();
+
+        if (allLabels.Count > 0)
+        {
+            const string sqlLabel = """
+                INSERT INTO Labels 
+                    (Id, BoardId, Name, Color, CreatedBy)
+                VALUES 
+                    (@Id, @BoardId, @Name, @Color, @CreatedBy);
+                """;
+
+            foreach (var label in allLabels)
+            {
+                await _connection.ExecuteAsync(
+                    sqlLabel,
+                    new 
+                    { 
+                        label.Id, 
+                        BoardId = board.Id, 
+                        label.Name, 
+                        label.Color, 
+                        label.CreatedBy 
+                    },
+                    _transaction);
+            }
+        }
+
+        const string sqlList = """
+            INSERT INTO Lists 
+                (Id, BoardId, Name, Position, CreatedBy)
+            VALUES 
+                (@Id, @BoardId, @Name, @Position, @CreatedBy);
+            """;
+
+        const string sqlCard = """
+            INSERT INTO Cards 
+                (Id, ListId, Name, Description, Position, DueDate, IsCompleted, CreatedBy)
+            VALUES 
+                (@Id, @ListId, @Name, @Description, @Position, @DueDate, @IsCompleted, @CreatedBy);
+            """;
+
+        const string sqlAttachment = """
+            INSERT INTO CardAttachments 
+                (Id, CardId, FileName, BlobUrl, ContentType, UploadedAt, UploadetBy)
+            VALUES 
+                (@Id, @CardId, @FileName, @BlobUrl, @ContentType, @UploadedAt, @UploadetBy);
+            """;
+
+        const string sqlAssignee = """
+            INSERT INTO CardAssignees (CardId, UserId)
+            VALUES (@CardId, @UserId);
+            """;
+
+        const string sqlChecklist = """
+            INSERT INTO ChecklistItems 
+                (Id, CardId, Text, IsCompleted, Position, CreatedBy)
+            VALUES 
+                (@Id, @CardId, @Text, @IsCompleted, @Position, @CreatedBy);
+            """;
+
+        const string sqlCardLabel = """
+            INSERT INTO CardLabels (CardId, LabelId)
+            VALUES (@CardId, @LabelId);
+            """;
+
+        const string sqlComment = """
+            INSERT INTO Comments 
+                (Id, CardId, Message, CreatedAt, CreatedBy)
+            VALUES 
+                (@Id, @CardId, @Message, @CreatedAt, @CreatedBy);
+            """;
+
+        foreach (var list in board.Lists)
+        {
+            await _connection.ExecuteAsync(
+                sqlList,
+                new 
+                {
+                    list.Id, 
+                    BoardId = board.Id, 
+                    list.Name, 
+                    list.Position, 
+                    list.CreatedBy 
+                },
+                _transaction);
+
+            foreach (var card in list.Cards)
+            {
+                await _connection.ExecuteAsync(
+                    sqlCard,
+                    new
+                    {
+                        card.Id,
+                        ListId = list.Id,
+                        card.Name,
+                        card.Description,
+                        card.Position,
+                        card.DueDate,
+                        card.IsCompleted,
+                        card.CreatedBy
+                    },
+                    _transaction);
+
+                foreach (var att in card.Attachments)
+                {
+                    await _connection.ExecuteAsync(
+                        sqlAttachment,
+                        new
+                        {
+                            att.Id,
+                            CardId = card.Id,
+                            att.FileName,
+                            att.BlobUrl,
+                            att.ContentType,
+                            att.UploadedAt,
+                            att.UploadetBy
+                        },
+                        _transaction);
+                }
+
+                foreach (var assignee in card.Assignees)
+                {
+                    await _connection.ExecuteAsync(
+                        sqlAssignee,
+                        new { CardId = card.Id, assignee.UserId },
+                        _transaction);
+                }
+
+                foreach (var item in card.ChecklistItems)
+                {
+                    await _connection.ExecuteAsync(
+                        sqlChecklist,
+                        new
+                        {
+                            item.Id,
+                            CardId = card.Id,
+                            item.Text,
+                            item.IsCompleted,
+                            item.Position,
+                            item.CreatedBy
+                        },
+                        _transaction);
+                }
+
+                foreach (var label in card.Labels)
+                {
+                    await _connection.ExecuteAsync(
+                        sqlCardLabel,
+                        new { CardId = card.Id, LabelId = label.Id },
+                        _transaction);
+                }
+
+                foreach (var comment in card.Comments)
+                {
+                    await _connection.ExecuteAsync(
+                        sqlComment,
+                        new
+                        {
+                            comment.Id,
+                            CardId = card.Id,
+                            comment.Message,
+                            comment.CreatedAt,
+                            comment.CreatedBy
+                        },
+                        _transaction);
+                }
+            }
+        }
     }
 }

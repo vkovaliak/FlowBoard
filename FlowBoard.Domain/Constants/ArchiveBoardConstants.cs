@@ -4,5 +4,7 @@ public static class ArchiveBoardConstants
 {
     public const string BoardArchiveQueue = "board-archive-queue";
 
+    public const string BoardRestoreQueue = "board-restore-queue";
+
     public const string BoardArchiveConnection = "ServiceBusConnection";
 }

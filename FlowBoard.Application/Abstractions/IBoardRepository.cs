@@ -1,3 +1,4 @@
+using FlowBoard.Domain.DTOs.Archive;
 using FlowBoard.Domain.DTOs.Boards;
 using FlowBoard.Domain.Entities;
 using FlowBoard.Domain.Enums;
@@ -22,4 +23,5 @@ public interface IBoardRepository : IBaseRepository<Board, Guid>
     Task TransferOwnershipAsync(Guid boardId, Guid currentOwnerId, Guid newOwnerId);
     Task<int> GetOwnedBoardsCountAsync(Guid userId);
     Task<int> GetMembersCountAsync(Guid boardId);
+    Task RestoreBoardContentAsync(BoardArchiveDto board);
 }

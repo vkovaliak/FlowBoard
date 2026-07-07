@@ -19,6 +19,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IFileStorageService, AzureBlobStorageService>();
         services.AddScoped<IArchiveJobTracker, CosmosArchiveJobTracker>();
+        services.AddScoped<IRestoreBoardProcessor, RestoreBoardProcessor>();
 
         services.AddSingleton(sp =>
         {

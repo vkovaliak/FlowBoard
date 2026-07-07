@@ -7,4 +7,6 @@ public interface IFileStorageService
     Task DeleteAsync(string fileUrl);
 
     Task<IReadOnlyList<string>> ListBlobUrlsAsync(string containerName);
+
+    Task<string?> DownloadAsync(Guid boardId, string containerName);
 }

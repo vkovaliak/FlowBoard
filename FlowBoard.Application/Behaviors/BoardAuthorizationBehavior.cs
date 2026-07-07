@@ -1,5 +1,7 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Application.Features.Boards.Commands.DeleteBoard;
 using FlowBoard.Application.Features.Boards.Commands.LeaveBoard;
+using FlowBoard.Application.Features.Boards.Commands.RestoreBoard;
 using FlowBoard.Application.Features.Boards.Commands.ToggleFavorite;
 using FlowBoard.Domain.Authorization;
 using FlowBoard.Domain.Enums;
@@ -37,7 +39,9 @@ public class BoardAuthorizationBehavior<TRequest, TResponse>
         var commandName = typeof(TRequest).Name;
 
         if (commandName is nameof(LeaveBoardCommand)
-            or nameof(ToggleFavoriteCommand))
+            or nameof(ToggleFavoriteCommand)
+            or nameof(RestoreBoardCommand)
+            or nameof(DeleteBoardCommand))
         {
             return await next();
         }

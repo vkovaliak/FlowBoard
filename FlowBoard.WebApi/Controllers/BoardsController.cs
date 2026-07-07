@@ -18,6 +18,7 @@ using FlowBoard.Domain.Enums;
 using FlowBoard.Application.Features.Boards.Commands.TransferOwnership;
 using FlowBoard.Application.Features.Boards.Commands.ChangeMemberRole;
 using FlowBoard.Application.Features.Boards.Queries.GetBackgrounds;
+using FlowBoard.Application.Features.Boards.Commands.RestoreBoard;
 
 namespace FlowBoard.WebApi.Controllers;
 
@@ -199,6 +200,20 @@ public class BoardsController : ControllerBase
     public async Task<IActionResult> ArchiveBoardAsync(Guid boardId)
     {
         var command = new ArchiveBoardCommand(boardId);
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("{boardId:guid}/restore")]
+    public async Task<IActionResult> Restore(Guid boardId)
+    {
+        var command = new RestoreBoardCommand(boardId);
         var result = await _mediator.Send(command);
 
         if (result.IsFailed)

@@ -27,9 +27,7 @@ public class DeleteBoardCommandHandler : IRequestHandler<DeleteBoardCommand, Res
             return Result.Fail(ErrorMessages.BoardNotFound);
         }
 
-        var role = await _boardRepository.GetUserRoleAsync(
-            board.Id, currentUserId);
-        if (role != BoardRole.Owner)
+        if (currentUserId != board.CreatedBy)
         {
             return Result.Fail("Only the board owner can delete this board.");
         }

@@ -6,4 +6,5 @@ public class ServiceBusOptions
 
     public string ConnectionString { get; set; } = default!;
     public string ArchiveQueueName { get; set; } = default!;
+    public string RestoreQueueName { get; set; } = default!;
 }

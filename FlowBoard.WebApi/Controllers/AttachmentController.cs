@@ -80,7 +80,7 @@ public class AttachmentController : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
-        await _commentHubContext.Clients.Group(boardId.ToString())
+        await _commentHubContext.Clients.Group(cardId.ToString())
             .SendAsync(HubMethods.CommentUpdated, boardId);
 
         return Ok(result.Value);
@@ -118,7 +118,7 @@ public class AttachmentController : ControllerBase
             return BadRequest(result.Errors.First().Message);
         }
 
-        await _commentHubContext.Clients.Group(boardId.ToString())
+        await _commentHubContext.Clients.Group(cardId.ToString())
             .SendAsync(HubMethods.CommentUpdated, boardId);
 
         return Ok(result);

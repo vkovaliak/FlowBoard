@@ -44,6 +44,8 @@ public class DeleteLabelCommandHandler
                 return Result.Fail("Label not found on this board");
             }
 
+            await uow.LabelRepository.RemoveByLabelIdAsync(label.Id);
+
             var result = await uow.LabelRepository.DeleteAsync(label);
 
             uow.Commit();

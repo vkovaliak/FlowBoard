@@ -70,4 +70,21 @@ public class UserRepository : BaseRepository<User, Guid>, IUserRepository
             new { CustomerId = customerId },
             _transaction);
     }
+
+    public async Task<bool> CancelSubscriptionPlanAsync(
+        Guid userId)
+    {
+        const string sql = """
+            UPDATE Users
+            SET SubscriptionPlan = 0, 
+                StripeCustomerId = NULL,
+                StripeSubscriptionId = NULL
+            WHERE Id = @UserId
+            """;
+
+        var result = await _connection.ExecuteAsync(
+            sql, new { UserId = userId}, _transaction);
+
+        return result > 0;
+    }
 }

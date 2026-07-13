@@ -28,4 +28,15 @@ public class LabelRepository : BaseRepository<Label, Guid>, ILabelRepository
             new { BoardId = boardId }, 
             _transaction);
     }
+
+    public async Task RemoveByLabelIdAsync(Guid labelId)
+    {
+        const string sql = """
+            DELETE FROM CardLabels 
+            WHERE LabelId = @LabelId
+            """;
+            
+        await _connection.ExecuteAsync(
+            sql, new { LabelId = labelId }, _transaction);
+    }
 }

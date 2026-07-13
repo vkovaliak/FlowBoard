@@ -1,6 +1,7 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Application.Features.Subscriptions.Commands.CreateCheckout;
 using FlowBoard.Application.Features.Subscriptions.Commands.HandleWebhook;
+using FlowBoard.Application.Features.Users.Commands.CancelSubscription;
 using FlowBoard.Domain.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -60,5 +61,19 @@ public class SubscriptionController : ControllerBase
             paymentEvent));
 
         return Ok();
+    }
+
+    [HttpPost("cancel")]
+    public async Task<IActionResult> CancelSubscriptionAsync()
+    {
+        var command = new CancelSubscriptionCommand();
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        return Ok(result.Value);
     }
 }

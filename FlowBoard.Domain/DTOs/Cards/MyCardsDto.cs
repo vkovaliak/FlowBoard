@@ -11,6 +11,7 @@ public class MyCardDto
     public string BoardName { get; set; } = default!;
     public string Name { get; set; } = default!;
     public string? Description { get; set; }
+    public DateTime? StartTime { get; set; }
     public DateTime? DueDate { get; set; }
     public bool IsCompleted { get; set; }
     public List<LabelDto> Labels { get; set; } = [];

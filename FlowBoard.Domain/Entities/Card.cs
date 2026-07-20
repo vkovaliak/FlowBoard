@@ -14,6 +14,8 @@ public class Card : BaseEntity<Guid>
 
     public required int Position { get; set; }
 
+    public DateTime? StartTime { get; set; }
+
     public DateTime? DueDate { get; set; }
 
     public bool IsCompleted { get; set; }

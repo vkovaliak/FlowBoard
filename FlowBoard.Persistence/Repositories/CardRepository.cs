@@ -109,6 +109,7 @@ public class CardRepository : BaseRepository<Card, Guid>, ICardRepository
                 b.Name AS BoardName,
                 c.Name,
                 c.Description,
+                c.StartTime,
                 c.DueDate,
                 c.IsCompleted
             FROM Cards c
@@ -193,5 +194,69 @@ public class CardRepository : BaseRepository<Card, Guid>, ICardRepository
         }
 
         return cards;
+    }
+
+    public async Task CopyLabelsAsync(Guid sourceCardId, Guid targetCardId)
+    {
+        const string sql = """
+            INSERT INTO CardLabels (CardId, LabelId)
+            SELECT @TargetCardId, LabelId
+            FROM CardLabels
+            WHERE CardId = @SourceCardId;
+            """;
+
+        await _connection.ExecuteAsync(sql,
+            new 
+            { 
+                SourceCardId = sourceCardId, 
+                TargetCardId = targetCardId 
+            },
+            _transaction);
+    }
+
+    public async Task CopyAssigneesAsync(Guid sourceCardId, Guid targetCardId)
+    {
+        const string sql = """
+            INSERT INTO CardAssignees (CardId, UserId)
+            SELECT @TargetCardId, UserId
+            FROM CardAssignees
+            WHERE CardId = @SourceCardId;
+            """;
+
+        await _connection.ExecuteAsync(sql,
+            new 
+            { 
+                SourceCardId = sourceCardId, 
+                TargetCardId = targetCardId 
+            },
+            _transaction);
+    }
+
+    public async Task CopyChecklistItemsAsync(
+        Guid sourceCardId, Guid targetCardId, Guid createdBy)
+    {
+        const string sql = """
+            INSERT INTO ChecklistItems
+                (Id, CardId, Text, IsCompleted, Position, CreatedAt, CreatedBy)
+            SELECT
+                NEWID(),
+                @TargetCardId,
+                Text,
+                0,
+                Position,
+                GETUTCDATE(),
+                @CreatedBy
+            FROM ChecklistItems
+            WHERE CardId = @SourceCardId;
+            """;
+
+        await _connection.ExecuteAsync(sql,
+            new
+            {
+                SourceCardId = sourceCardId,
+                TargetCardId = targetCardId,
+                CreatedBy = createdBy
+            },
+            _transaction);
     }
 }

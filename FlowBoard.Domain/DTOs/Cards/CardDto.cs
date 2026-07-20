@@ -17,6 +17,8 @@ public class CardDto
 
     public int Position { get; set; }
 
+    public DateTime? StartTime { get; set; }
+
     public DateTime? DueDate { get; set; }
 
     public bool IsCompleted { get; set; }

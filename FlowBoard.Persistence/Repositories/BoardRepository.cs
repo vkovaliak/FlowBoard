@@ -138,6 +138,7 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 c.Name,
                 c.Description,
                 c.Position,
+                c.StartTime,
                 c.DueDate,
                 c.IsCompleted,
 

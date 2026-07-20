@@ -1,0 +1,2 @@
+ALTER TABLE [Cards] 
+ADD [StartTime] DATETIME2 NULL;

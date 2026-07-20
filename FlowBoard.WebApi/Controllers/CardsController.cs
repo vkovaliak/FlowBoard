@@ -1,9 +1,11 @@
 using FlowBoard.Application.Features.Cards.Commands.AssignMember;
 using FlowBoard.Application.Features.Cards.Commands.CreateCard;
 using FlowBoard.Application.Features.Cards.Commands.DeleteCard;
+using FlowBoard.Application.Features.Cards.Commands.DuplicateCard;
 using FlowBoard.Application.Features.Cards.Commands.MoveCard;
 using FlowBoard.Application.Features.Cards.Commands.RenameCard;
 using FlowBoard.Application.Features.Cards.Commands.SetCardDueDate;
+using FlowBoard.Application.Features.Cards.Commands.SetCardStartTime;
 using FlowBoard.Application.Features.Cards.Commands.ToggleCardCompletion;
 using FlowBoard.Application.Features.Cards.Commands.UnassignMember;
 using FlowBoard.Application.Features.Cards.Commands.UpdateCard;
@@ -232,6 +234,24 @@ public class CardsController : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpPut("cards/{cardId:guid}/start-time")]
+    public async Task<IActionResult> SetStartTimeAsync(
+        Guid boardId, Guid cardId, SetCardStartTimeCommand command)
+    {
+        var updatedCommand = command with { BoardId = boardId, CardId = cardId };
+        var result = await _mediator.Send(updatedCommand);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
     [HttpGet("/api/my-tasks")]
     public async Task<IActionResult> GetMyTasksAsync()
     {
@@ -241,6 +261,23 @@ public class CardsController : ControllerBase
         {
             return BadRequest(result.Errors.First().Message);
         }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("cards/{cardId:guid}/duplicate")]
+    public async Task<IActionResult> DuplicateAsync(Guid boardId, Guid cardId)
+    {
+        var command = new DuplicateCardCommand(boardId, cardId);
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
+
+        await _hubContext.Clients.Group(boardId.ToString())
+            .SendAsync(HubMethods.BoardUpdated, boardId);
 
         return Ok(result.Value);
     }

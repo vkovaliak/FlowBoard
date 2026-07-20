@@ -7,4 +7,5 @@ public record UserDto(
     string EmailAddress,
     string UserName,
     string? AvatarUrl,
-    SubscriptionPlan SubscriptionPlan);
+    SubscriptionPlan SubscriptionPlan,
+    bool HasPassword);

@@ -38,7 +38,9 @@ public class RestoreBoardCommandHandler
                 return Result.Fail(ErrorMessages.BoardNotFound);
             }
 
-            if (board.CreatedBy != currentUserId)
+            var role = await uow.BoardRepository.GetUserRoleAsync(
+                board.Id, currentUserId);
+            if (role != BoardRole.Owner)
             {
                 return Result.Fail(
                     "Only the board owner can restore this board.");

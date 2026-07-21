@@ -8,36 +8,49 @@ namespace FlowBoard.Application.Features.Boards.Commands.DeleteBoard;
 
 public class DeleteBoardCommandHandler : IRequestHandler<DeleteBoardCommand, Result<bool>>
 {
-    private readonly IBoardRepository _boardRepository;
+    private readonly IUnitOfWorkFactory _uowFactory;
     private readonly ICurrentUserService _currentUserService;
 
 
-    public DeleteBoardCommandHandler(IBoardRepository boardRepository, ICurrentUserService currentUserService)
+    public DeleteBoardCommandHandler(IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService)
     {
-        _boardRepository = boardRepository;
+        _uowFactory = uowFactory;
         _currentUserService = currentUserService;
     }
 
     public async Task<Result<bool>> Handle(DeleteBoardCommand request, CancellationToken cancellationToken)
     {
-        var currentUserId = _currentUserService.GetId();
-        var board = await _boardRepository.GetByIdAsync(request.BoardId);
-        if (board is null)
-        {
-            return Result.Fail(ErrorMessages.BoardNotFound);
-        }
+        using var uow = _uowFactory.Create();
 
-        if (currentUserId != board.CreatedBy)
+        try
         {
-            return Result.Fail("Only the board owner can delete this board.");
-        }
+            var currentUserId = _currentUserService.GetId();
+            var board = await uow.BoardRepository.GetByIdAsync(request.BoardId);
+            if (board is null)
+            {
+                return Result.Fail(ErrorMessages.BoardNotFound);
+            }
 
-        var result = await _boardRepository.DeleteAsync(board);
-        if (!result)
+            var role = await uow.BoardRepository.GetUserRoleAsync(
+                board.Id, currentUserId);
+            if (role != BoardRole.Owner)
+            {
+                return Result.Fail("Only the board owner can restore this board.");
+            }
+
+            var result = await uow.BoardRepository.DeleteAsync(board);
+            if (!result)
+            {
+                return Result.Fail("Failed to delete the board from the database.");
+            }
+            uow.Commit();
+
+            return Result.Ok(result);
+        }
+        catch
         {
-            return Result.Fail("Failed to delete the board from the database.");
+            uow.Rollback();
+            throw;
         }
-
-        return Result.Ok(result);
     }
 }

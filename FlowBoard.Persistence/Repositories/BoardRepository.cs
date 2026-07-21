@@ -63,10 +63,9 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
                 ISNULL(bm.IsFavorite, 0) AS IsFavorite,
                 ISNULL(bm.Role, 0) AS UserRole
             FROM Boards b
-            LEFT JOIN BoardMembers bm ON b.Id = bm.BoardId AND bm.UserId = @UserId
-            WHERE (b.CreatedBy = @UserId 
-                OR bm.UserId = @UserId)
-                AND b.ArchiveStatus = @Status
+            INNER JOIN BoardMembers bm 
+            ON b.Id = bm.BoardId AND bm.UserId = @UserId
+            WHERE b.ArchiveStatus = @Status
             ORDER BY b.CreatedAt DESC
             """;
 
@@ -643,11 +642,12 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
         const string sql = """
             DELETE FROM Lists WHERE BoardId = @BoardId;
             DELETE FROM Labels WHERE BoardId = @BoardId;
-            DELETE FROM BoardMembers WHERE BoardId = @BoardId;
+            DELETE FROM BoardMembers WHERE BoardId = @BoardId
+                AND Role <> @OwnerRole;
             """;
 
         await _connection.ExecuteAsync(
-            sql, new { BoardId = boardId }, 
+            sql, new { BoardId = boardId, OwnerRole = (int)BoardRole.Owner }, 
             _transaction);
     }
 
@@ -758,12 +758,17 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
         if (board.Members.Count > 0)
         {
             const string sqlMembers = """
-                INSERT INTO BoardMembers 
-                    (BoardId, UserId, Role, IsFavorite)
-                VALUES 
-                    (@BoardId, @UserId, @Role, 0);
+                IF NOT EXISTS (
+                    SELECT 1 FROM BoardMembers 
+                    WHERE BoardId = @BoardId AND UserId = @UserId)
+                BEGIN
+                    INSERT INTO BoardMembers 
+                        (BoardId, UserId, Role, IsFavorite)
+                    VALUES 
+                        (@BoardId, @UserId, @Role, 0);
+                END
                 """;
-
+                
             foreach (var member in board.Members)
             {
                 await _connection.ExecuteAsync(

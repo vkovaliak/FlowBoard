@@ -1,6 +1,8 @@
 using FlowBoard.Application.Abstractions;
+using FlowBoard.Application.Features.Activities.Events;
 using FlowBoard.Domain.Constants;
 using FlowBoard.Domain.Entities;
+using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
@@ -10,12 +12,14 @@ public class CreateCardCommandHandler : IRequestHandler<CreateCardCommand, Resul
 {
     private readonly IUnitOfWorkFactory _uowFactory;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IMediator _mediator;
 
 
-    public CreateCardCommandHandler(IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService)
+    public CreateCardCommandHandler(IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService, IMediator mediator)
     {
         _uowFactory = uowFactory;
         _currentUserService = currentUserService;
+        _mediator = mediator;
     }
 
     public async Task<Result<Guid>> Handle(CreateCardCommand command, CancellationToken cancellationToken)
@@ -52,6 +56,15 @@ public class CreateCardCommandHandler : IRequestHandler<CreateCardCommand, Resul
             await uow.CardRepository.CreateAsync(card);
 
             uow.Commit();
+
+            await _mediator.Publish(new BoardActivityEvent(
+                BoardId: command.BoardId,
+                UserId: currentUserId,
+                ActionType: ActivityAction.CardCreated,
+                EntityType: ActivityEntityType.Card,
+                EntityId: card.Id,
+                Description: $"created card '{command.Name}'"));
+            
             return Result.Ok(card.Id);
         }
         catch

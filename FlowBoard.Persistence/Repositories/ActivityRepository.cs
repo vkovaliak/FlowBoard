@@ -1,3 +1,4 @@
+using System.Data;
 using Dapper;
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.DTOs.Activities;
@@ -9,6 +10,9 @@ public class ActivityRepository : BaseRepository<Activity, Guid>, IActivityRepos
 {
     public ActivityRepository(ISqlConnectionFactory connectionFactory)
         : base(connectionFactory) { }
+    
+    internal ActivityRepository(IDbConnection connection, IDbTransaction transaction) 
+        : base(connection, transaction) { }
 
     public async Task<IEnumerable<ActivityDto>> GetByBoardIdAsync(
         Guid boardId, int limit = 50)

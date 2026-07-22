@@ -1,5 +1,4 @@
 using FlowBoard.Application.Abstractions;
-using FlowBoard.Application.Features.Activities.Events;
 using FlowBoard.Domain.Constants;
 using FlowBoard.Domain.Entities;
 using FlowBoard.Domain.Enums;
@@ -12,17 +11,16 @@ public class CreateCardCommandHandler : IRequestHandler<CreateCardCommand, Resul
 {
     private readonly IUnitOfWorkFactory _uowFactory;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IMediator _mediator;
 
-
-    public CreateCardCommandHandler(IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService, IMediator mediator)
+    public CreateCardCommandHandler(
+        IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService)
     {
         _uowFactory = uowFactory;
         _currentUserService = currentUserService;
-        _mediator = mediator;
     }
 
-    public async Task<Result<Guid>> Handle(CreateCardCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(
+        CreateCardCommand command, CancellationToken cancellationToken)
     {
         var currentUserId = _currentUserService.GetId();
         using var uow = _uowFactory.Create();
@@ -34,14 +32,15 @@ public class CreateCardCommandHandler : IRequestHandler<CreateCardCommand, Resul
                 return Result.Fail(ErrorMessages.BoardNotFound);
             }
 
-            var isMember = await uow.BoardRepository.IsMemberAsync(command.BoardId, currentUserId);
-
+            var isMember = await uow.BoardRepository.IsMemberAsync(
+                command.BoardId, currentUserId);
             if (!isMember && board.CreatedBy != currentUserId)
             {
                 return Result.Fail(ErrorMessages.NoBoardAccess);
             }
 
-            var position = await uow.CardRepository.GetNextPositionAsync(command.ListId);
+            var position = await uow.CardRepository.GetNextPositionAsync(
+                command.ListId);
 
             var card = new Card
             {
@@ -55,15 +54,21 @@ public class CreateCardCommandHandler : IRequestHandler<CreateCardCommand, Resul
 
             await uow.CardRepository.CreateAsync(card);
 
-            uow.Commit();
+            var activity = new Activity
+            {
+                Id = Guid.NewGuid(),
+                BoardId = command.BoardId,
+                UserId = currentUserId,
+                ActionType = ActivityAction.CardCreated,
+                EntityType = ActivityEntityType.Card,
+                EntityId = card.Id,
+                Description = $"created card '{command.Name}'",
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            await uow.ActivityRepository.CreateAsync(activity);
 
-            await _mediator.Publish(new BoardActivityEvent(
-                BoardId: command.BoardId,
-                UserId: currentUserId,
-                ActionType: ActivityAction.CardCreated,
-                EntityType: ActivityEntityType.Card,
-                EntityId: card.Id,
-                Description: $"created card '{command.Name}'"));
+            uow.Commit();
             
             return Result.Ok(card.Id);
         }

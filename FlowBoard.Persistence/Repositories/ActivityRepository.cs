@@ -14,12 +14,12 @@ public class ActivityRepository : BaseRepository<Activity, Guid>, IActivityRepos
     internal ActivityRepository(IDbConnection connection, IDbTransaction transaction) 
         : base(connection, transaction) { }
 
-    public async Task<IEnumerable<ActivityDto>> GetByBoardIdAsync(
-        Guid boardId, int limit = 50)
+    public async Task<IEnumerable<ActivityDto>> GetByCardIdAsync(Guid cardId)
     {
         const string sql = """
-            SELECT TOP (@Limit)
+            SELECT 
                 a.Id,
+                a.CardId,
                 a.UserId,
                 u.UserName,
                 u.AvatarUrl,
@@ -28,12 +28,11 @@ public class ActivityRepository : BaseRepository<Activity, Guid>, IActivityRepos
                 a.CreatedAt
             FROM Activities a
             JOIN Users u ON u.Id = a.UserId
-            WHERE a.BoardId = @BoardId
+            WHERE a.CardId = @CardId
             ORDER BY a.CreatedAt DESC;
             """;
 
         return await _connection.QueryAsync<ActivityDto>(
-            sql, new { BoardId = boardId, Limit = limit }, 
-            _transaction);
+            sql, new { CardId = cardId }, _transaction);
     }
 }

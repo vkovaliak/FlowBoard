@@ -54,15 +54,20 @@ public class CreateCardCommandHandler : IRequestHandler<CreateCardCommand, Resul
 
             await uow.CardRepository.CreateAsync(card);
 
+            var user = await uow.UserRepository.GetByIdAsync(currentUserId);
+            if (user is null)
+            {
+                return Result.Fail("User is not found");
+            }
+
             var activity = new Activity
             {
                 Id = Guid.NewGuid(),
+                CardId = card.Id,
                 BoardId = command.BoardId,
                 UserId = currentUserId,
                 ActionType = ActivityAction.CardCreated,
-                EntityType = ActivityEntityType.Card,
-                EntityId = card.Id,
-                Description = $"created card '{command.Name}'",
+                Description = $"Card created by {user.UserName}",
                 CreatedAt = DateTime.UtcNow
             };
             

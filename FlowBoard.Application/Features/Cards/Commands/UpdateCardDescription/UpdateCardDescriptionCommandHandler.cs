@@ -1,5 +1,7 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.Constants;
+using FlowBoard.Domain.Entities;
+using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
@@ -50,6 +52,25 @@ public class UpdateCardDescriptionommandHandler
             card.UpdatedBy = currentUserId;
             
             await uow.CardRepository.UpdateAsync(card);
+
+            var user = await uow.UserRepository.GetByIdAsync(currentUserId);
+            if (user is null)
+            {
+                return Result.Fail("User is not found");
+            }
+
+            var activity = new Activity
+            {
+                Id = Guid.NewGuid(),
+                CardId = card.Id,
+                BoardId = command.BoardId,
+                UserId = currentUserId,
+                ActionType = ActivityAction.CardDescriptionUpdated,
+                Description = $"Card description updated by {user.UserName}",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await uow.ActivityRepository.CreateAsync(activity);
 
             uow.Commit();
             return Result.Ok(true);

@@ -3,12 +3,13 @@ namespace FlowBoard.Domain.Enums;
 public enum ActivityAction
 {
     CardCreated = 0,
-    CardUpdated = 1,
+    CardRenamed = 1,
     CardMoved = 2,
     CardDeleted = 3,
     CardCompleted = 4,
-    CardReopened = 5,
+    CardUncomleted = 5,
     CardDuplicated = 6,
+    CardDescriptionUpdated = 7,
 
     DueDateSet = 10,
     DueDateRemoved = 11,
@@ -27,5 +28,6 @@ public enum ActivityAction
     CommentUpdated = 24,
     CommentDeleted = 25,
     CommentAttachmentsAdded = 26,
-    CommentAttachmentsRemoved = 27    
+    CommentAttachmentsRemoved = 27,
+    ChecklistItemUpdated = 28
 }

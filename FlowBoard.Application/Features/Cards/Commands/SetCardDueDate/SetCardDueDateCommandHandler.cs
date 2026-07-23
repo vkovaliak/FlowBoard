@@ -1,5 +1,7 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.Constants;
+using FlowBoard.Domain.Entities;
+using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
@@ -49,6 +51,29 @@ public class SetCardDueDateCommandHandler
             card.UpdatedBy = currentUserId;
             
             await uow.CardRepository.UpdateAsync(card);
+
+            var user = await uow.UserRepository.GetByIdAsync(currentUserId);
+            if (user is null)
+            {
+                return Result.Fail("User is not found");
+            }
+
+            var activity = new Activity
+            {
+                Id = Guid.NewGuid(),
+                CardId = card.Id,
+                BoardId = command.BoardId,
+                UserId = currentUserId,
+                ActionType = command.DueDate.HasValue 
+                    ? ActivityAction.DueDateSet 
+                    : ActivityAction.DueDateRemoved,
+                Description = command.DueDate.HasValue
+                    ? $"Due date set to {command.DueDate:d MMM yyyy} by {user.UserName}"
+                    : $"Due date removed by {user.UserName}",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await uow.ActivityRepository.CreateAsync(activity);
 
             uow.Commit();
             return Result.Ok(true);

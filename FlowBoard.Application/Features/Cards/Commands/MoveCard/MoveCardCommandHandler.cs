@@ -1,5 +1,7 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.Constants;
+using FlowBoard.Domain.Entities;
+using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
@@ -54,6 +56,37 @@ public class MoveCardCommandHandler : IRequestHandler<MoveCardCommand, Result<bo
             card.UpdatedBy = currentUserId;
 
             await uow.CardRepository.UpdateAsync(card);
+
+            var user = await uow.UserRepository.GetByIdAsync(currentUserId);
+            if (user is null)
+            {
+                return Result.Fail("User is not found");
+            }
+
+            var oldList = await uow.ListRepository.GetByIdAsync(oldListId);
+            if (oldList is null)
+            {
+                return Result.Fail("List is not found");
+            }
+
+            var newList = await uow.ListRepository.GetByIdAsync(newListId);
+            if (newList is null)
+            {
+                return Result.Fail("List is not found");
+            }
+
+            var activity = new Activity
+            {
+                Id = Guid.NewGuid(),
+                CardId = card.Id,
+                BoardId = request.BoardId,
+                UserId = currentUserId,
+                ActionType = ActivityAction.CardMoved,
+                Description = $"Card moved from {oldList.Name} to {newList.Name} by {user.UserName}",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await uow.ActivityRepository.CreateAsync(activity);
 
             uow.Commit();
             return Result.Ok(true);

@@ -37,6 +37,10 @@ public class UnitOfWork : IUnitOfWork
     public ICommentRepository CommentRepository
         => _comment ??= new CommentRepository(_connection, _transaction);
 
+    private ICardAttachmentRepository? _cardAttachment;
+    public ICardAttachmentRepository CardAttachmentRepository
+        => _cardAttachment ??= new CardAttachmentsRepository(_connection, _transaction);
+
     private ILabelRepository? _labels;
     public ILabelRepository LabelRepository
         => _labels ??= new LabelRepository(_connection, _transaction);

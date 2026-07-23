@@ -4,31 +4,33 @@ using MediatR;
 using FlowBoard.Domain.DTOs.Attachments;
 using FlowBoard.Domain.Entities;
 using FlowBoard.Domain.Constants;
+using FlowBoard.Domain.Enums;
 
 namespace FlowBoard.Application.Features.Attachments.Commands.UploadCardAttachment;
 
 public class UploadCardAttachmentCommandHandler : IRequestHandler<UploadCardAttachmentCommand, Result<AttachmentResponseDto>>
 {
     private readonly IFileStorageService _fileStorageService;
-    private readonly ICardAttachmentRepository _cardAttachmentRepository;
+    private readonly IUnitOfWorkFactory _uowFactory;
     private readonly ICurrentUserService _currentUserService;
 
     public UploadCardAttachmentCommandHandler(
         IFileStorageService fileStorageService,
-        ICardAttachmentRepository cardAttachmentRepository,
+        IUnitOfWorkFactory uowFactory,
         ICurrentUserService currentUserService)
     {
         _fileStorageService = fileStorageService;
-        _cardAttachmentRepository = cardAttachmentRepository;
+        _uowFactory = uowFactory;
         _currentUserService = currentUserService;
     }
 
     public async Task<Result<AttachmentResponseDto>> Handle(
         UploadCardAttachmentCommand request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.GetId();
+        using var uow = _uowFactory.Create();
         try
         {
-            var currentUserId = _currentUserService.GetId();
             string fileUrl = await _fileStorageService.UploadAsync(
                 request.FileStream,
                 request.FileName,
@@ -44,7 +46,28 @@ public class UploadCardAttachmentCommandHandler : IRequestHandler<UploadCardAtta
                 UploadetBy = currentUserId
             };
 
-            await _cardAttachmentRepository.CreateAsync(attachment);
+            await uow.CardAttachmentRepository.CreateAsync(attachment);
+
+            var user = await uow.UserRepository.GetByIdAsync(currentUserId);
+            if (user is null)
+            {
+                return Result.Fail("User is not found");
+            }
+
+            var activity = new Activity
+            {
+                Id = Guid.NewGuid(),
+                CardId = request.CardId, 
+                BoardId = request.BoardId,
+                UserId = currentUserId,
+                ActionType = ActivityAction.CommentAttachmentsAdded,
+                Description = $"Attachment '{request.FileName}' added to card by {user.UserName}",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await uow.ActivityRepository.CreateAsync(activity);
+
+            uow.Commit();
 
             return Result.Ok(new AttachmentResponseDto
             {
@@ -53,9 +76,10 @@ public class UploadCardAttachmentCommandHandler : IRequestHandler<UploadCardAtta
                 BlobUrl = attachment.BlobUrl
             });
         }
-        catch (Exception ex)
+        catch
         {
-            return Result.Fail(ex.ToString());
+            uow.Rollback();
+            return Result.Fail("An error occurred while uploading");
         }
     }
 }

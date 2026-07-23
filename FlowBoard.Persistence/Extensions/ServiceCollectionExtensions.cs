@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
         services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
 
+        services.AddScoped<IActivityRepository, ActivityRepository>();
         services.AddScoped<IBoardRepository, BoardRepository>();
         services.AddScoped<ICardRepository, CardRepository>();
         services.AddScoped<ICardAttachmentRepository, CardAttachmentsRepository>();

@@ -1,6 +1,7 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.Constants;
 using FlowBoard.Domain.Entities;
+using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
@@ -11,14 +12,15 @@ public class CreateCardCommandHandler : IRequestHandler<CreateCardCommand, Resul
     private readonly IUnitOfWorkFactory _uowFactory;
     private readonly ICurrentUserService _currentUserService;
 
-
-    public CreateCardCommandHandler(IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService)
+    public CreateCardCommandHandler(
+        IUnitOfWorkFactory uowFactory, ICurrentUserService currentUserService)
     {
         _uowFactory = uowFactory;
         _currentUserService = currentUserService;
     }
 
-    public async Task<Result<Guid>> Handle(CreateCardCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(
+        CreateCardCommand command, CancellationToken cancellationToken)
     {
         var currentUserId = _currentUserService.GetId();
         using var uow = _uowFactory.Create();
@@ -30,14 +32,15 @@ public class CreateCardCommandHandler : IRequestHandler<CreateCardCommand, Resul
                 return Result.Fail(ErrorMessages.BoardNotFound);
             }
 
-            var isMember = await uow.BoardRepository.IsMemberAsync(command.BoardId, currentUserId);
-
+            var isMember = await uow.BoardRepository.IsMemberAsync(
+                command.BoardId, currentUserId);
             if (!isMember && board.CreatedBy != currentUserId)
             {
                 return Result.Fail(ErrorMessages.NoBoardAccess);
             }
 
-            var position = await uow.CardRepository.GetNextPositionAsync(command.ListId);
+            var position = await uow.CardRepository.GetNextPositionAsync(
+                command.ListId);
 
             var card = new Card
             {
@@ -51,7 +54,27 @@ public class CreateCardCommandHandler : IRequestHandler<CreateCardCommand, Resul
 
             await uow.CardRepository.CreateAsync(card);
 
+            var user = await uow.UserRepository.GetByIdAsync(currentUserId);
+            if (user is null)
+            {
+                return Result.Fail("User is not found");
+            }
+
+            var activity = new Activity
+            {
+                Id = Guid.NewGuid(),
+                CardId = card.Id,
+                BoardId = command.BoardId,
+                UserId = currentUserId,
+                ActionType = ActivityAction.CardCreated,
+                Description = $"Card created by {user.UserName}",
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            await uow.ActivityRepository.CreateAsync(activity);
+
             uow.Commit();
+            
             return Result.Ok(card.Id);
         }
         catch

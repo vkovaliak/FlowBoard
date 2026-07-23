@@ -1,5 +1,7 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.Constants;
+using FlowBoard.Domain.Entities;
+using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
@@ -38,7 +40,38 @@ public class ToggleCardCompletionCommandHandler
                 return Result.Fail(ErrorMessages.NoBoardAccess);
             }
 
+            var card = await uow.CardRepository.GetByIdAsync(command.CardId);
+            if (card is null)
+            {
+                return Result.Fail(ErrorMessages.CardNotFound);
+            }
+
             await uow.CardRepository.ToggleCompletionAsync(command.CardId);
+
+            var user = await uow.UserRepository.GetByIdAsync(currentUserId);
+            if (user is null)
+            {
+                return Result.Fail("User is not found");
+            }
+
+            var isNowCompleted = !card.IsCompleted;
+
+            var activity = new Activity
+            {
+                Id = Guid.NewGuid(),
+                CardId = command.CardId,
+                BoardId = command.BoardId,
+                UserId = currentUserId,
+                ActionType = isNowCompleted 
+                    ? ActivityAction.CardCompleted 
+                    : ActivityAction.CardUncomleted,
+                Description = isNowCompleted
+                    ? $"Card completed by {user.UserName}"
+                    : $"Card uncompleted by {user.UserName}",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await uow.ActivityRepository.CreateAsync(activity);
 
             uow.Commit();
             return Result.Ok(true);

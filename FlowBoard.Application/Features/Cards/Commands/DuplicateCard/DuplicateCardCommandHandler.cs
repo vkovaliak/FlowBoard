@@ -1,6 +1,7 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.Constants;
 using FlowBoard.Domain.Entities;
+using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
@@ -72,6 +73,25 @@ public class DuplicateCardCommandHandler
 
             await uow.CardRepository
                 .CopyChecklistItemsAsync(original.Id, newCard.Id, currentUserId);
+
+            var user = await uow.UserRepository.GetByIdAsync(currentUserId);
+            if (user is null)
+            {
+                return Result.Fail("User is not found");
+            }
+
+            var activity = new Activity
+            {
+                Id = Guid.NewGuid(),
+                CardId = newCard.Id,
+                BoardId = command.BoardId,
+                UserId = currentUserId,
+                ActionType = ActivityAction.CardDuplicated,
+                Description = $"Card duplicated by {user.UserName}",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await uow.ActivityRepository.CreateAsync(activity);
 
             uow.Commit();
             

@@ -1,5 +1,7 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.Constants;
+using FlowBoard.Domain.Entities;
+using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
@@ -40,6 +42,31 @@ public class UnassignMemberCommandHandler
 
             await uow.CardAssigneeRepository.UnassignAsync(
                 command.CardId, command.UserId);
+            
+            var user = await uow.UserRepository.GetByIdAsync(currentUserId);
+            if (user is null)
+            {
+                return Result.Fail("User is not found");
+            }
+
+            var unassignedUser = await uow.UserRepository.GetByIdAsync(command.UserId);
+            if (unassignedUser is null)
+            {
+                return Result.Fail("User is not found");
+            }
+
+            var activity = new Activity
+            {
+                Id = Guid.NewGuid(),
+                CardId = command.CardId,
+                BoardId = command.BoardId,
+                UserId = currentUserId,
+                ActionType = ActivityAction.AssigneeRemoved,
+                Description = $"{user.UserName} unassigned {unassignedUser.UserName} from card",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await uow.ActivityRepository.CreateAsync(activity);
 
             uow.Commit();
             return Result.Ok(true);

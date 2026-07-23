@@ -1,5 +1,7 @@
 using FlowBoard.Application.Abstractions;
 using FlowBoard.Domain.Constants;
+using FlowBoard.Domain.Entities;
+using FlowBoard.Domain.Enums;
 using FluentResults;
 using MediatR;
 
@@ -38,8 +40,33 @@ public class DetachLabelCommandHandler
                 return Result.Fail(ErrorMessages.NoBoardAccess);
             }
 
+            var label = await uow.LabelRepository.GetByIdAsync(command.LabelId);
+            if (label is null)
+            {
+                return Result.Fail("Label not found");
+            }
+
             await uow.CardLabelRepository.DetachAsync(
                 command.CardId, command.LabelId);
+            
+            var user = await uow.UserRepository.GetByIdAsync(currentUserId);
+            if (user is null)
+            {
+                return Result.Fail("User is not found");
+            }
+            
+            var activity = new Activity
+            {
+                Id = Guid.NewGuid(),
+                CardId = command.CardId,
+                BoardId = command.BoardId,
+                UserId = currentUserId,
+                ActionType = ActivityAction.LabelRemoved,
+                Description = $"Label {label.Name} removed from card by {user.UserName}",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await uow.ActivityRepository.CreateAsync(activity);
 
             uow.Commit();
             return Result.Ok(true);

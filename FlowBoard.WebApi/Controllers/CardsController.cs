@@ -1,3 +1,4 @@
+using FlowBoard.Application.Features.Activities.Queries.GetCardActivities;
 using FlowBoard.Application.Features.Cards.Commands.AssignMember;
 using FlowBoard.Application.Features.Cards.Commands.CreateCard;
 using FlowBoard.Application.Features.Cards.Commands.DeleteCard;
@@ -278,6 +279,20 @@ public class CardsController : ControllerBase
 
         await _hubContext.Clients.Group(boardId.ToString())
             .SendAsync(HubMethods.BoardUpdated, boardId);
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("cards/{cardId:guid}/activities")]
+    public async Task<IActionResult> GetCardActivities(Guid boardId, Guid cardId)
+    {
+        var result = await _mediator.Send(
+            new GetCardActivitiesQuery(boardId, cardId));
+
+        if (result.IsFailed)
+        {
+            return BadRequest(result.Errors.First().Message);
+        }
 
         return Ok(result.Value);
     }

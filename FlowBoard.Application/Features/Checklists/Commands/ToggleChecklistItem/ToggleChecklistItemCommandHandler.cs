@@ -71,6 +71,8 @@ public class ToggleChecklistItemCommandHandler
                 CreatedAt = DateTime.UtcNow
             };
 
+            await uow.ActivityRepository.CreateAsync(activity);
+
             uow.Commit();
             return Result.Ok(result);
         }

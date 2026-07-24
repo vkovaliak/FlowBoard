@@ -1,3 +1,4 @@
+using FlowBoard.Domain.DTOs.Boards;
 using FlowBoard.Domain.Enums;
 
 namespace FlowBoard.Domain.Authorization;
@@ -31,4 +32,19 @@ public static class BoardPermissions
 
     public static bool CanTransferOwnership(BoardRole role) =>
         role == BoardRole.Owner;
-}
+    
+    public static BoardRole? ResolveEffectiveRole(BoardAccessDto access)
+    {
+        if (access.MemberRole.HasValue)
+        {
+            return access.MemberRole.Value;
+        }
+
+        if (access.IsPublic)
+        {
+            return BoardRole.Viewer;
+        }
+
+        return null;
+    }
+};

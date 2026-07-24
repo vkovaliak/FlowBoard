@@ -952,4 +952,24 @@ public class BoardRepository : BaseRepository<Board, Guid>, IBoardRepository
             }
         }
     }
+
+    public async Task<BoardAccessDto?> GetBoardAccessAsync(
+        Guid boardId, Guid userId)
+    {
+        const string sql = """
+            SELECT 
+                b.Id AS BoardId,
+                b.IsPublic,
+                bm.[Role] AS MemberRole
+            FROM Boards b
+            LEFT JOIN BoardMembers bm 
+                ON bm.BoardId = b.Id AND bm.UserId = @UserId
+            WHERE b.Id = @BoardId;
+            """;
+
+        return await _connection.QueryFirstOrDefaultAsync<BoardAccessDto>(
+            sql,
+            new { BoardId = boardId, UserId = userId },
+            _transaction);
+    }
 }

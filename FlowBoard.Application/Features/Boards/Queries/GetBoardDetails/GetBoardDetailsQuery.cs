@@ -6,4 +6,4 @@ namespace FlowBoard.Application.Features.Boards.Queries.GetBoardDetails;
 
 public record GetBoardDetailsQuery(
     Guid BoardId) 
-    : IRequest<Result<BoardDetailsDto?>>;
+    : IRequest<Result<BoardDetailsDto>>;

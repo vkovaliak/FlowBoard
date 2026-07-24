@@ -24,4 +24,5 @@ public interface IBoardRepository : IBaseRepository<Board, Guid>
     Task<int> GetOwnedBoardsCountAsync(Guid userId);
     Task<int> GetMembersCountAsync(Guid boardId);
     Task RestoreBoardContentAsync(BoardArchiveDto board);
+    Task<BoardAccessDto?> GetBoardAccessAsync(Guid boardId, Guid userId);
 }
